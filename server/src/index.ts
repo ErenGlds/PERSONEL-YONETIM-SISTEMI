@@ -5,6 +5,7 @@ import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import { protect, AuthRequest } from "./middleware/authMIDDLEware";
 import departmentRoutes from "./routes/departmentRoutes";
+import employeeRoutes from "./routes/employeeRoutes";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
+app.use("/api/employees", employeeRoutes);
 app.get("/api/profile", protect, (req: AuthRequest, res) => {
   res.json({
     message: "Bu bir korumalı rotadır/This is a protected route",
