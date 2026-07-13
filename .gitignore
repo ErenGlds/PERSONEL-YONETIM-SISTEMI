@@ -1,14 +1,9 @@
-# Bağımlılıklar — herkes npm install ile kendisi indirir
 node_modules/
-
 .env
 .env.local
-
 .next/
 dist/
 out/
-
 *.log
-
 .DS_Store
 Thumbs.db
