@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
+import { protect, AuthRequest } from "./middleware/authMIDDLEware";
 
 dotenv.config();
 
@@ -12,6 +13,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.get("/api/profile", protect, (req: AuthRequest, res) => {
+  res.json({
+    message: "Bu bir korumalı rotadır/This is a protected route",
+    user: req.user,
+  });
+});
 
 app.get("/", (req, res) => {
   res.json({ message: "API çalışıyor/ API is running" });
