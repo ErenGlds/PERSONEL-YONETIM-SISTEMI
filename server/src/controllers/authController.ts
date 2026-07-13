@@ -8,11 +8,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res
-        .status(400)
-        .json({
-          message: "Bu e-posta zaten kayıtlı/Email is already registered",
-        });
+      res.status(400).json({
+        message: "Bu e-posta zaten kayıtlı/Email is already registered",
+      });
       return;
     }
 
@@ -29,41 +27,34 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server Error", error });
+    console.error("Register hatası:", error);
+    res.status(500).json({ message: "Sunucu hatası", error });
   }
 };
-
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res
-        .status(400)
-        .json({
-          message:
-            "E-posta ve şifre zorunludur/Email and password are required",
-        });
+      res.status(400).json({
+        message: "E-posta ve şifre zorunludur/Email and password are required",
+      });
       return;
     }
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      res
-        .status(401)
-        .json({
-          message: "Geçersiz e-posta veya şifre/Invalid email or password",
-        });
+      res.status(401).json({
+        message: "Geçersiz e-posta veya şifre/Invalid email or password",
+      });
       return;
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      res
-        .status(401)
-        .json({
-          message: "Geçersiz e-posta veya şifre/Invalid email or password",
-        });
+      res.status(401).json({
+        message: "Geçersiz e-posta veya şifre/Invalid email or password",
+      });
       return;
     }
 
@@ -79,6 +70,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası", error });
+    res.status(500).json({ message: "Sunucu hatası/Server Error", error });
   }
 };
