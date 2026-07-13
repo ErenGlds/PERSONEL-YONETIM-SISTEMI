@@ -18,12 +18,10 @@ export const protect = (
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res
-        .status(401)
-        .json({
-          message:
-            "Yetkilendirme tokeni bulunamadı/Authorization token not found",
-        });
+      res.status(401).json({
+        message:
+          "Yetkilendirme tokeni bulunamadı/Authorization token not found",
+      });
       return;
     }
     const token = authHeader.split(" ")[1];
@@ -38,12 +36,10 @@ export const protect = (
     req.user = decoded;
     next();
   } catch (error) {
-    res
-      .status(401)
-      .json({
-        message:
-          "Geçersiz token ya da token süresi dolmuş/Invalid token or token has expired",
-        error,
-      });
+    res.status(401).json({
+      message:
+        "Geçersiz token ya da token süresi dolmuş/Invalid token or token has expired",
+      error,
+    });
   }
 };
