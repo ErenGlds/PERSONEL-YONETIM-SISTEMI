@@ -8,6 +8,7 @@ import departmentRoutes from "./routes/departmentRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
 import leaveRoutes from "./routes/leaveRoutes";
 import holidayRoutes from "./routes/holidayRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/holidays", holidayRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.get("/api/profile", protect, (req: AuthRequest, res) => {
   res.json({
     message: "Bu bir korumalı rotadır/This is a protected route",
