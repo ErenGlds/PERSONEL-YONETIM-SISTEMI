@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import { protect, AuthRequest } from "./middleware/authMIDDLEware";
 import departmentRoutes from "./routes/departmentRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
+import leaveRoutes from "./routes/leaveRoutes";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/leaves", leaveRoutes);
 app.get("/api/profile", protect, (req: AuthRequest, res) => {
   res.json({
     message: "Bu bir korumalı rotadır/This is a protected route",
