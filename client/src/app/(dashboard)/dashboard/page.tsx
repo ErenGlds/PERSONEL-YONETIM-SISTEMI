@@ -12,7 +12,11 @@ export default function DashboardPage() {
     apiFetch<DashboardStats>("/dashboard")
       .then((data) => setStats(data))
       .catch((err) =>
-        setError(err instanceof Error ? err.message : "Veriler alınamadı"),
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Veriler alınamadı/Failed to retrieve data",
+        ),
       );
   }, []);
 
@@ -25,12 +29,36 @@ export default function DashboardPage() {
   }
 
   const cards = [
-    { title: "Toplam Çalışan", value: stats.totalEmployees, icon: "👥" },
-    { title: "Aktif Çalışan", value: stats.activeEmployees, icon: "✅" },
-    { title: "Departman", value: stats.totalDepartments, icon: "🏢" },
-    { title: "Bekleyen İzin", value: stats.pendingLeaves, icon: "⏳" },
-    { title: "Onaylı İzin", value: stats.approvedLeaves, icon: "📗" },
-    { title: "Yaklaşan Tatil", value: stats.upcomingHolidays, icon: "🎉" },
+    {
+      title: "Toplam Çalışan/total Employees",
+      value: stats.totalEmployees,
+      icon: "👥",
+    },
+    {
+      title: "Aktif Çalışan/ Active Employees",
+      value: stats.activeEmployees,
+      icon: "✅",
+    },
+    {
+      title: "Departman/Departmens",
+      value: stats.totalDepartments,
+      icon: "🏢",
+    },
+    {
+      title: "Bekleyen İzin/ Pending Leaves",
+      value: stats.pendingLeaves,
+      icon: "⏳",
+    },
+    {
+      title: "Onaylı İzin/ Approved Leaves",
+      value: stats.approvedLeaves,
+      icon: "📗",
+    },
+    {
+      title: "Yaklaşan Tatil/ Upcoming Holidays",
+      value: stats.upcomingHolidays,
+      icon: "🎉",
+    },
   ];
 
   return (
@@ -54,11 +82,14 @@ export default function DashboardPage() {
       </div>
       <div className="mt-8 rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-clay-800">
-          Departmanlara Göre Çalışan Dağılımı
+          Departmanlara Göre Çalışan Dağılımı/Employee Distribution by
+          Department
         </h2>
 
         {stats.employeesByDepartment.length === 0 ? (
-          <p className="text-sm text-clay-700/60">Henüz veri yok.</p>
+          <p className="text-sm text-clay-700/60">
+            Henüz veri yok/No data available yet
+          </p>
         ) : (
           <div className="space-y-3">
             {stats.employeesByDepartment.map((dept) => {

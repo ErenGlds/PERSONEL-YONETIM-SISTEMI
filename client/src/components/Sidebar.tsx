@@ -56,7 +56,7 @@ export default function Sidebar() {
           onClick={handleLogout}
           className="w-full rounded-lg px-4 py-2.5 text-left text-sm text-bronze-100/80 transition hover:bg-clay-800 hover:text-red-300"
         >
-          🚪 Çıkış Yap/Log off
+          Çıkış Yap/Log off
         </button>
       </div>
     </aside>

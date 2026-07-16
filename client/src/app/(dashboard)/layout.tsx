@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/api";
 import Sidebar from "@/components/Sidebar";
 import { User } from "@/types";
+
+const subscribe = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+};
 
 export default function DashboardLayout({
   children,
@@ -13,27 +17,30 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
 
-  const [hasToken] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return getToken() !== null;
-  });
+  const token = useSyncExternalStore(
+    subscribe,
+    () => localStorage.getItem("token"),
+    () => null,
+  );
 
-  const [user] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const userJson = useSyncExternalStore(
+    subscribe,
+    () => localStorage.getItem("user"),
+    () => null,
+  );
+
+  const user: User | null = userJson ? JSON.parse(userJson) : null;
 
   useEffect(() => {
-    if (!hasToken) {
+    if (token === null) {
       router.replace("/login");
     }
-  }, [hasToken, router]);
+  }, [token, router]);
 
-  if (!hasToken) {
+  if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-clay-700">Yönlendiriliyor/Directing...</p>
+        <p className="text-clay-700">Yükleniyor/Loading...</p>
       </div>
     );
   }
@@ -48,7 +55,6 @@ export default function DashboardLayout({
             <p className="text-xs text-clay-700/60">{user?.role}</p>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
