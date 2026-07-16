@@ -187,7 +187,7 @@ export default function DepartmentsPage() {
             disabled={saving}
             className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
           >
-            {saving ? "Kaydediliyor/Saving..." : "Kaydet"}
+            {saving ? "Kaydediliyor/Saving..." : "Kaydet/Save"}
           </button>
         </form>
       </Modal>
