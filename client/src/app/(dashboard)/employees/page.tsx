@@ -60,7 +60,6 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, filterDept, filterStatus, page]);
 
   const handleChange = (

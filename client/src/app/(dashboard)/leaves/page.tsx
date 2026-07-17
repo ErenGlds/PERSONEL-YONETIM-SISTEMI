@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { Leave, Employee } from "@/types";
+import { apiFetch, isAdmin } from "@/lib/api";
+import { Leave, Employee, Paginated } from "@/types";
 import Modal from "@/components/modal";
 
-// Etiket haritaları: kod değeri → ekranda görünen (TR / EN)
 const leaveTypeLabels: Record<Leave["leaveType"], string> = {
   annual: "Yıllık / annual",
   sick: "Hastalık / sick",
@@ -34,6 +33,8 @@ const emptyForm = {
 };
 
 export default function LeavesPage() {
+  const admin = isAdmin();
+
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,15 +43,16 @@ export default function LeavesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const fetchData = () => {
     Promise.all([
       apiFetch<Leave[]>("/leaves"),
-      apiFetch<Employee[]>("/employees"),
+      apiFetch<Paginated<Employee>>("/employees?limit=1000"),
     ])
-      .then(([lvs, emps]) => {
+      .then(([lvs, empRes]) => {
         setLeaves(lvs);
-        setEmployees(emps);
+        setEmployees(empRes.data);
         setError("");
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Hata"))
@@ -61,17 +63,18 @@ export default function LeavesPage() {
     fetchData();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
-  ) => {
+  type FormChangeEvent = React.ChangeEvent<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+  >;
+
+  const handleChange = (e: FormChangeEvent) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormError("");
     try {
       await apiFetch("/leaves", {
         method: "POST",
@@ -81,7 +84,9 @@ export default function LeavesPage() {
       setForm(emptyForm);
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Kaydedilemedi");
+      setFormError(
+        err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
+      );
     } finally {
       setSaving(false);
     }
@@ -95,22 +100,19 @@ export default function LeavesPage() {
       });
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Güncellenemedi");
+      alert(
+        err instanceof Error ? err.message : "Güncellenemedi / Update failed",
+      );
     }
   };
 
   const handleDelete = async (leave: Leave) => {
-    if (
-      !confirm(
-        "Bu izin kaydı silinsin mi?/Are you sure you want to delete this leave record?",
-      )
-    )
-      return;
+    if (!confirm("Bu izin kaydı silinsin mi? / Delete this leave?")) return;
     try {
       await apiFetch(`/leaves/${leave._id}`, { method: "DELETE" });
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Silinemedi/Failed to delete");
+      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
     }
   };
 
@@ -119,22 +121,24 @@ export default function LeavesPage() {
   const inputCls =
     "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
 
-  if (loading) return <p className="text-clay-700">Yükleniyor...</p>;
+  if (loading)
+    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
   if (error)
     return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">İzinler/Leaves</h1>
+        <h1 className="text-2xl font-bold text-clay-800">İzinler / Leaves</h1>
         <button
           onClick={() => {
             setForm(emptyForm);
+            setFormError("");
             setModalOpen(true);
           }}
           className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
         >
-          + Yeni İzin
+          + Yeni İzin / New Leave
         </button>
       </div>
 
@@ -142,15 +146,15 @@ export default function LeavesPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-bronze-100 text-clay-800">
             <tr>
-              <th className="px-4 py-3 font-semibold">Çalışan/Employee</th>
-              <th className="px-4 py-3 font-semibold">Tür/Type</th>
+              <th className="px-4 py-3 font-semibold">Çalışan / Employee</th>
+              <th className="px-4 py-3 font-semibold">Tür / Type</th>
               <th className="px-4 py-3 font-semibold">
-                Tarih Aralığı/Date Range
+                Tarih Aralığı / Date Range
               </th>
-              <th className="px-4 py-3 font-semibold">Gün/Day</th>
-              <th className="px-4 py-3 font-semibold">Durum/Status</th>
+              <th className="px-4 py-3 font-semibold">Gün / Days</th>
+              <th className="px-4 py-3 font-semibold">Durum / Status</th>
               <th className="px-4 py-3 text-right font-semibold">
-                İşlemler/Actions
+                İşlemler / Actions
               </th>
             </tr>
           </thead>
@@ -161,7 +165,7 @@ export default function LeavesPage() {
                   colSpan={6}
                   className="px-4 py-8 text-center text-clay-700/60"
                 >
-                  Henüz izin kaydı yok/No leave records yet
+                  Henüz izin kaydı yok. / No leaves yet. 📅
                 </td>
               </tr>
             ) : (
@@ -192,28 +196,30 @@ export default function LeavesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {leave.status === "pending" && (
+                    {admin && leave.status === "pending" && (
                       <>
                         <button
                           onClick={() => updateStatus(leave, "approved")}
                           className="mr-3 text-green-600 hover:underline"
                         >
-                          Onayla/Accept
+                          Onayla / Approve
                         </button>
                         <button
                           onClick={() => updateStatus(leave, "rejected")}
                           className="mr-3 text-amber-600 hover:underline"
                         >
-                          Reddet/Reject
+                          Reddet / Reject
                         </button>
                       </>
                     )}
-                    <button
-                      onClick={() => handleDelete(leave)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Sil/Delete
-                    </button>
+                    {admin && (
+                      <button
+                        onClick={() => handleDelete(leave)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Sil / Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -224,13 +230,18 @@ export default function LeavesPage() {
 
       <Modal
         open={modalOpen}
-        title="Yeni İzin Talebi"
+        title="Yeni İzin Talebi / New Leave Request"
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              Çalışan *
+              Çalışan / Employee *
             </label>
             <select
               name="employee"
@@ -239,7 +250,7 @@ export default function LeavesPage() {
               required
               className={inputCls}
             >
-              <option value="">Seçiniz...</option>
+              <option value="">Seçiniz... / Select...</option>
               {employees.map((emp) => (
                 <option key={emp._id} value={emp._id}>
                   {emp.firstName} {emp.lastName}
@@ -249,7 +260,7 @@ export default function LeavesPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              İzin Türü *
+              İzin Türü / Leave Type *
             </label>
             <select
               name="leaveType"
@@ -268,7 +279,7 @@ export default function LeavesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Başlangıç *
+                Başlangıç / Start *
               </label>
               <input
                 type="date"
@@ -281,7 +292,7 @@ export default function LeavesPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Bitiş *
+                Bitiş / End *
               </label>
               <input
                 type="date"
@@ -295,7 +306,7 @@ export default function LeavesPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              Açıklama
+              Açıklama / Reason
             </label>
             <textarea
               name="reason"
@@ -310,7 +321,7 @@ export default function LeavesPage() {
             disabled={saving}
             className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
           >
-            {saving ? "Kaydediliyor..." : "Kaydet"}
+            {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>
         </form>
       </Modal>
