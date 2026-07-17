@@ -59,3 +59,12 @@ export interface DashboardStats {
   upcomingHolidays: number;
   employeesByDepartment: { name: string; count: number }[];
 }
+export interface Paginated<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

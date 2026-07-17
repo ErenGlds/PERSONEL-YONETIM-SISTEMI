@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { Employee, Department } from "@/types";
+import { apiFetch, isAdmin } from "@/lib/api";
+import { Employee, Department, Paginated } from "@/types";
 import Modal from "@/components/modal";
 
 const emptyForm = {
@@ -18,10 +18,18 @@ const emptyForm = {
 };
 
 export default function EmployeesPage() {
+  const admin = isAdmin();
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [filterDept, setFilterDept] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
@@ -29,27 +37,36 @@ export default function EmployeesPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchData = () => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (filterDept) params.set("department", filterDept);
+    if (filterStatus) params.set("status", filterStatus);
+    params.set("page", String(page));
+    params.set("limit", "10");
+
     Promise.all([
-      apiFetch<Employee[]>("/employees"),
+      apiFetch<Paginated<Employee>>(`/employees?${params.toString()}`),
       apiFetch<Department[]>("/departments"),
     ])
-      .then(([emps, depts]) => {
-        setEmployees(emps);
+      .then(([empRes, depts]) => {
+        setEmployees(empRes.data);
+        setTotalPages(empRes.pagination.totalPages);
         setDepartments(depts);
         setError("");
       })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Hata/Error"),
-      )
+      .catch((err) => setError(err instanceof Error ? err.message : "Hata"))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterDept, filterStatus, page]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -93,70 +110,112 @@ export default function EmployeesPage() {
       setModalOpen(false);
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Kaydedilemedi");
+      alert(err instanceof Error ? err.message : "Kaydedilemedi / Save failed");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (emp: Employee) => {
-    if (
-      !confirm(`${emp.firstName} ${emp.lastName} silinsin mi/will be deleted?`)
-    )
+    if (!confirm(`${emp.firstName} ${emp.lastName} silinsin mi? / Delete?`))
       return;
     try {
       await apiFetch(`/employees/${emp._id}`, { method: "DELETE" });
       fetchData();
     } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Silinemedi/Failedd to delete.",
-      );
+      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
     }
   };
 
   const inputCls =
     "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
 
-  if (loading) return <p className="text-clay-700">Yükleniyor/Loading...</p>;
+  if (loading)
+    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
   if (error)
     return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">Çalışanlar</h1>
-        <button
-          onClick={() => openModal()}
-          className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+        <h1 className="text-2xl font-bold text-clay-800">
+          Çalışanlar / Employees
+        </h1>
+        {admin && (
+          <button
+            onClick={() => openModal()}
+            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+          >
+            + Yeni Çalışan / New Employee
+          </button>
+        )}
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-3">
+        <input
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Ara (ad, e-posta)... / Search..."
+          className="w-64 rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300"
+        />
+        <select
+          value={filterDept}
+          onChange={(e) => {
+            setFilterDept(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:outline-none"
         >
-          + Yeni Çalışan
-        </button>
+          <option value="">Tüm Departmanlar / All Departments</option>
+          {departments.map((d) => (
+            <option key={d._id} value={d._id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:outline-none"
+        >
+          <option value="">Tüm Durumlar / All Statuses</option>
+          <option value="active">Aktif / Active</option>
+          <option value="inactive">Pasif / Inactive</option>
+        </select>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-bronze-100 text-clay-800">
             <tr>
+              <th className="px-4 py-3 font-semibold">Ad Soyad / Name</th>
+              <th className="px-4 py-3 font-semibold">E-posta / Email</th>
               <th className="px-4 py-3 font-semibold">
-                Ad Soyad/Name Lastname
+                Departman / Department
               </th>
-              <th className="px-4 py-3 font-semibold">E-posta/E-mail</th>
-              <th className="px-4 py-3 font-semibold">Departman/Department</th>
-              <th className="px-4 py-3 font-semibold">Pozisyon/Position</th>
-              <th className="px-4 py-3 font-semibold">Durum/Status</th>
-              <th className="px-4 py-3 text-right font-semibold">
-                İşlemler/Actions
-              </th>
+              <th className="px-4 py-3 font-semibold">Pozisyon / Position</th>
+              <th className="px-4 py-3 font-semibold">Durum / Status</th>
+              {admin && (
+                <th className="px-4 py-3 text-right font-semibold">
+                  İşlemler / Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {employees.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={admin ? 6 : 5}
                   className="px-4 py-8 text-center text-clay-700/60"
                 >
-                  Henüz çalışan yok/No employees yet.
+                  Sonuç bulunamadı. / No results. 👥
                 </td>
               </tr>
             ) : (
@@ -182,24 +241,26 @@ export default function EmployeesPage() {
                       }`}
                     >
                       {emp.status === "active"
-                        ? "Aktif/Online"
-                        : "Inaktif/Offline"}
+                        ? "Aktif / Active"
+                        : "Pasif / Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => openModal(emp)}
-                      className="mr-3 text-bronze-700 hover:underline"
-                    >
-                      Düzenle/Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(emp)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Sil/Delete
-                    </button>
-                  </td>
+                  {admin && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => openModal(emp)}
+                        className="mr-3 text-bronze-700 hover:underline"
+                      >
+                        Düzenle / Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(emp)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Sil / Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -207,12 +268,32 @@ export default function EmployeesPage() {
         </table>
       </div>
 
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page <= 1}
+          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40"
+        >
+          ← Önceki / Prev
+        </button>
+        <span className="text-clay-700">
+          Sayfa / Page {page} / {totalPages || 1}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page >= totalPages}
+          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40"
+        >
+          Sonraki / Next →
+        </button>
+      </div>
+
       <Modal
         open={modalOpen}
         title={
           editing
-            ? "Çalışanı Düzenle/Edit Employees"
-            : "Yeni Çalışan/New employee"
+            ? "Çalışanı Düzenle / Edit Employee"
+            : "Yeni Çalışan / New Employee"
         }
         onClose={() => setModalOpen(false)}
       >
@@ -220,7 +301,7 @@ export default function EmployeesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Ad/Name *
+                Ad / First Name *
               </label>
               <input
                 name="firstName"
@@ -232,7 +313,7 @@ export default function EmployeesPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Soyad/Last Name *
+                Soyad / Last Name *
               </label>
               <input
                 name="lastName"
@@ -245,7 +326,7 @@ export default function EmployeesPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              E-posta /E-mail*
+              E-posta / Email *
             </label>
             <input
               type="email"
@@ -258,7 +339,7 @@ export default function EmployeesPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              Telefon/Phone
+              Telefon / Phone
             </label>
             <input
               name="phone"
@@ -269,7 +350,7 @@ export default function EmployeesPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
-              Departman /Department*
+              Departman / Department *
             </label>
             <select
               name="department"
@@ -278,7 +359,7 @@ export default function EmployeesPage() {
               required
               className={inputCls}
             >
-              <option value="">Seçiniz/Select...</option>
+              <option value="">Seçiniz... / Select...</option>
               {departments.map((d) => (
                 <option key={d._id} value={d._id}>
                   {d.name}
@@ -289,7 +370,7 @@ export default function EmployeesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Pozisyon/Position *
+                Pozisyon / Position *
               </label>
               <input
                 name="position"
@@ -301,7 +382,7 @@ export default function EmployeesPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Maaş/ Salary *
+                Maaş / Salary *
               </label>
               <input
                 type="number"
@@ -317,7 +398,7 @@ export default function EmployeesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                İşe Giriş /Hire*
+                İşe Giriş / Hire Date *
               </label>
               <input
                 type="date"
@@ -330,7 +411,7 @@ export default function EmployeesPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Durum/Status
+                Durum / Status
               </label>
               <select
                 name="status"
@@ -338,8 +419,8 @@ export default function EmployeesPage() {
                 onChange={handleChange}
                 className={inputCls}
               >
-                <option value="active">Aktif/Online</option>
-                <option value="inactive">InAktif/Offline</option>
+                <option value="active">Aktif / Active</option>
+                <option value="inactive">Pasif / Inactive</option>
               </select>
             </div>
           </div>
@@ -348,7 +429,7 @@ export default function EmployeesPage() {
             disabled={saving}
             className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
           >
-            {saving ? "Kaydediliyor/Saving..." : "Kaydet/Saved"}
+            {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>
         </form>
       </Modal>

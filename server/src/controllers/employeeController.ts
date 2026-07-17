@@ -8,12 +8,41 @@ export const getEmployees = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const employees = await Employee.find()
+    const { search, department, status } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 10);
+
+    const filter: Record<string, unknown> = {};
+
+    if (search) {
+      filter.$or = [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+    if (department) filter.department = department;
+    if (status) filter.status = status;
+
+    const total = await Employee.countDocuments(filter);
+
+    const employees = await Employee.find(filter)
       .populate("department", "name")
-      .sort({ createdAt: -1 });
-    res.status(200).json(employees);
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.status(200).json({
+      data: employees,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası / Server Error", error });
+    res.status(500).json({ message: "Sunucu hatası/Server error", error });
   }
 };
 
@@ -43,11 +72,9 @@ export const createEmployee = async (
 
     const existingEmail = await Employee.findOne({ email });
     if (existingEmail) {
-      res
-        .status(400)
-        .json({
-          message: "Bu e-posta ile kayıtlı çalışan var / Email already in use",
-        });
+      res.status(400).json({
+        message: "Bu e-posta ile kayıtlı çalışan var / Email already in use",
+      });
       return;
     }
 
