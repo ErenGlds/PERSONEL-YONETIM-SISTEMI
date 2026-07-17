@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
-import { protect, AuthRequest } from "./middleware/authMIDDLEware";
 import departmentRoutes from "./routes/departmentRoutes";
 import employeeRoutes from "./routes/employeeRoutes";
 import leaveRoutes from "./routes/leaveRoutes";
 import holidayRoutes from "./routes/holidayRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import { errorHandler } from "./middleware/errorMiddleware";
 
 dotenv.config();
 
@@ -17,28 +17,25 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.json({ message: "API çalışıyor 🚀" });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.get("/api/profile", protect, (req: AuthRequest, res) => {
-  res.json({
-    message: "Bu bir korumalı rotadır/This is a protected route",
-    user: req.user,
-  });
-});
 
-app.get("/", (req, res) => {
-  res.json({ message: "API çalışıyor/ API is running" });
-});
+app.use(errorHandler);
 
 const startServer = async (): Promise<void> => {
   await connectDB();
   app.listen(PORT, () => {
     console.log(
-      `Server http://localhost:${PORT} adresinde çalışıyor/ Server is running at http://localhost:${PORT}`,
+      `Server http://localhost:${PORT} adresinde çalışıyor/Server is running at http://localhost:${PORT}`,
     );
   });
 };
