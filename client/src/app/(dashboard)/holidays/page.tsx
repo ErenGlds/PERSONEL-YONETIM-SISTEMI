@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, isAdmin } from "@/lib/api";
 import { Holiday } from "@/types";
 import Modal from "@/components/modal";
 
 const emptyForm = { name: "", date: "", description: "" };
 
 export default function HolidaysPage() {
+  const admin = isAdmin();
+
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,6 +18,7 @@ export default function HolidaysPage() {
   const [editing, setEditing] = useState<Holiday | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const fetchHolidays = () => {
     apiFetch<Holiday[]>("/holidays")
@@ -31,9 +34,11 @@ export default function HolidaysPage() {
     fetchHolidays();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  type FormChangeEvent = React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement
+  >;
+
+  const handleChange = (e: FormChangeEvent) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -48,12 +53,14 @@ export default function HolidaysPage() {
           }
         : emptyForm,
     );
+    setFormError("");
     setModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormError("");
     try {
       if (editing) {
         await apiFetch(`/holidays/${editing._id}`, {
@@ -69,7 +76,9 @@ export default function HolidaysPage() {
       setModalOpen(false);
       fetchHolidays();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Kaydedilemedi / Save failed");
+      setFormError(
+        err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
+      );
     } finally {
       setSaving(false);
     }
@@ -104,12 +113,14 @@ export default function HolidaysPage() {
         <h1 className="text-2xl font-bold text-clay-800">
           Tatiller / Holidays
         </h1>
-        <button
-          onClick={() => openModal()}
-          className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
-        >
-          + Yeni Tatil / New Holiday
-        </button>
+        {admin && (
+          <button
+            onClick={() => openModal()}
+            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+          >
+            + Yeni Tatil / New Holiday
+          </button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-sm">
@@ -121,16 +132,18 @@ export default function HolidaysPage() {
               <th className="px-4 py-3 font-semibold">
                 Açıklama / Description
               </th>
-              <th className="px-4 py-3 text-right font-semibold">
-                İşlemler / Actions
-              </th>
+              {admin && (
+                <th className="px-4 py-3 text-right font-semibold">
+                  İşlemler / Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {holidays.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={admin ? 4 : 3}
                   className="px-4 py-8 text-center text-clay-700/60"
                 >
                   Henüz tatil yok. / No holidays yet. 🎉
@@ -153,20 +166,22 @@ export default function HolidaysPage() {
                   <td className="px-4 py-3 text-clay-700/80">
                     {holiday.description || "—"}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => openModal(holiday)}
-                      className="mr-3 text-bronze-700 hover:underline"
-                    >
-                      Düzenle / Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(holiday)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Sil / Delete
-                    </button>
-                  </td>
+                  {admin && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => openModal(holiday)}
+                        className="mr-3 text-bronze-700 hover:underline"
+                      >
+                        Düzenle / Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(holiday)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Sil / Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -182,6 +197,11 @@ export default function HolidaysPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-medium text-clay-700">
               Ad / Name *
