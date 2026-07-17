@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { apiFetch, isAdmin } from "@/lib/api";
 import { Employee, Department, Paginated } from "@/types";
 import Modal from "@/components/modal";
-
 const emptyForm = {
   firstName: "",
   lastName: "",

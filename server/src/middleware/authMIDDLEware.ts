@@ -17,29 +17,43 @@ export const protect = (
 ): void => {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.status(401).json({
         message:
-          "Yetkilendirme tokeni bulunamadı/Authorization token not found",
+          "Yetkilendirme tokeni bulunamadı / Authorization token not found",
       });
       return;
     }
+
     const token = authHeader.split(" ")[1];
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
-      throw new Error(
-        "JWT_SECRET ortam değişkenlerinde tanımlanmamış./JWT_SECRET is not defined in environment variables",
-      );
+      throw new Error("JWT_SECRET tanımlı değil");
     }
+
     const decoded = jwt.verify(token, secret) as JwtPayload;
     req.user = decoded;
+
     next();
   } catch (error) {
     res.status(401).json({
-      message:
-        "Geçersiz token ya da token süresi dolmuş/Invalid token or token has expired",
-      error,
+      message: "Geçersiz veya süresi dolmuş token / Invalid or expired token",
     });
   }
+};
+
+export const adminOnly = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (req.user?.role !== "admin") {
+    res.status(403).json({
+      message: "Bu işlem için admin yetkisi gerekli / Admin access required",
+    });
+    return;
+  }
+  next();
 };

@@ -5,15 +5,15 @@ import {
   updateLeave,
   deleteLeave,
 } from "../controllers/leaveController";
-import { protect } from "../middleware/authMIDDLEware";
+import { protect, adminOnly } from "../middleware/authMIDDLEware";
 
 const router = Router();
 
 router.use(protect);
 
 router.get("/", getLeaves);
-router.delete("/:id", deleteLeave);
-router.put("/:id", updateLeave);
-router.post("/:id", createLeave);
+router.post("/", createLeave);
+router.put("/:id", adminOnly, updateLeave);
+router.delete("/:id", adminOnly, deleteLeave);
 
 export default router;
