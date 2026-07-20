@@ -38,3 +38,45 @@ export const markAsRead = async (
     res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };
+export const deleteNotification = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const notification = await Notification.findOneAndDelete({
+      _id: id,
+      recipient: req.user?.userId,
+    });
+
+    if (!notification) {
+      res
+        .status(404)
+        .json({ message: "Bildirim bulunamadı / Notification not found" });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ message: "Bildirim silindi / Notification deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
+  }
+};
+
+export const clearAllNotifications = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    await Notification.deleteMany({ recipient: req.user?.userId });
+    res
+      .status(200)
+      .json({
+        message: "Tüm bildirimler temizlendi / All notifications cleared",
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
+  }
+};
