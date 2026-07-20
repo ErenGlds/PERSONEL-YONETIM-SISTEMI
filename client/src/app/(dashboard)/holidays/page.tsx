@@ -19,7 +19,7 @@ export default function HolidaysPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
-
+  const [importing, setImporting] = useState(false);
   const fetchHolidays = () => {
     apiFetch<Holiday[]>("/holidays")
       .then((data) => {
@@ -94,6 +94,23 @@ export default function HolidaysPage() {
       alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
     }
   };
+  const handleImport = async () => {
+    setImporting(true);
+    try {
+      const result = await apiFetch<{ message: string }>(
+        "/holidays/import?year=" + new Date().getFullYear(),
+        { method: "POST" },
+      );
+      alert(result.message);
+      fetchHolidays();
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : "İçe aktarılamadı / Import failed",
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString("tr-TR");
 
@@ -114,12 +131,23 @@ export default function HolidaysPage() {
           Tatiller / Holidays
         </h1>
         {admin && (
-          <button
-            onClick={() => openModal()}
-            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
-          >
-            + Yeni Tatil / New Holiday
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleImport}
+              disabled={importing}
+              className="rounded-lg border border-bronze-600 px-4 py-2 text-sm font-medium text-bronze-700 transition hover:bg-bronze-100 disabled:opacity-50"
+            >
+              {importing
+                ? "Aktarılıyor... / Importing..."
+                : "Resmi Tatilleri Aktar / Import Public Holidays"}
+            </button>
+            <button
+              onClick={() => openModal()}
+              className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+            >
+              + Yeni Tatil / New Holiday
+            </button>
+          </div>
         )}
       </div>
 

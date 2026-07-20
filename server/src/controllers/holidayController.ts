@@ -73,3 +73,50 @@ export const deleteHoliday = async (
     res.status(500).json({ message: "Sunucu hatası/Server error", error });
   }
 };
+
+interface NagerHoliday {
+  date: string;
+  localName: string;
+  name: string;
+}
+
+export const importPublicHolidays = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const year = Number(req.query.year) || new Date().getFullYear();
+
+    const response = await fetch(
+      `https://date.nager.at/api/v3/PublicHolidays/${year}/TR`,
+    );
+
+    if (!response.ok) {
+      res.status(502).json({
+        message: "Dış API'ye ulaşılamadı / External API unavailable",
+      });
+      return;
+    }
+
+    const publicHolidays = (await response.json()) as NagerHoliday[];
+
+    let added = 0;
+    for (const ph of publicHolidays) {
+      const exists = await Holiday.findOne({ date: new Date(ph.date) });
+      if (!exists) {
+        await Holiday.create({
+          name: `${ph.localName} / ${ph.name}`,
+          date: ph.date,
+          description: "Resmi tatil (Nager.Date) / Public holiday",
+        });
+        added++;
+      }
+    }
+
+    res.status(200).json({
+      message: `${added} tatil eklendi, ${publicHolidays.length - added} zaten mevcuttu / ${added} added, ${publicHolidays.length - added} already existed`,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
+  }
+};

@@ -4,8 +4,9 @@ import {
   updateHoliday,
   deleteHoliday,
   createHoliday,
+  importPublicHolidays,
 } from "../controllers/holidayController";
-import { protect } from "../middleware/authMIDDLEware";
+import { adminOnly, protect } from "../middleware/authMIDDLEware";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.get("/", getHolidays);
 router.post("/", createHoliday);
 router.put("/:id", updateHoliday);
 router.delete("/:id", deleteHoliday);
+router.post("/import", adminOnly, importPublicHolidays);
 
 export default router;
