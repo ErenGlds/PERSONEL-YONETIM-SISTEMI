@@ -2,6 +2,8 @@ import { Response } from "express";
 import { Leave } from "../models/Leave";
 import { Employee } from "../models/Employee";
 import { AuthRequest } from "../middleware/authMIDDLEware";
+import { Notification } from "../models/Notification";
+import { User } from "../models/User";
 
 const calculateDays = (start: Date, end: Date): number => {
   const msPerDay = 86400000;
@@ -39,12 +41,10 @@ export const createLeave = async (
     const end = new Date(endDate);
 
     if (end < start) {
-      res
-        .status(400)
-        .json({
-          message:
-            "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
-        });
+      res.status(400).json({
+        message:
+          "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
+      });
       return;
     }
 
@@ -59,6 +59,15 @@ export const createLeave = async (
       reason,
     });
 
+    const admins = await User.find({ role: "admin" });
+    const empDoc = await Employee.findById(employee);
+    await Notification.insertMany(
+      admins.map((a) => ({
+        recipient: a._id,
+        message: `Yeni izin talebi / New leave request: ${empDoc?.firstName} ${empDoc?.lastName}`,
+        link: "/leaves",
+      })),
+    );
     const populated = await leave.populate("employee", "firstName lastName");
     res.status(201).json(populated);
   } catch (error) {
@@ -79,12 +88,10 @@ export const updateLeave = async (
       const end = new Date(endDate);
 
       if (end < start) {
-        res
-          .status(400)
-          .json({
-            message:
-              "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
-          });
+        res.status(400).json({
+          message:
+            "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
+        });
         return;
       }
 
@@ -94,13 +101,28 @@ export const updateLeave = async (
     const leave = await Leave.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
-    }).populate("employee", "firstName lastName");
+    }).populate("employee", "firstName lastName email");
 
     if (!leave) {
-      res
-        .status(404)
-        .json({ message: "İzin kaydı bulunamadı/Couldn't find leave request" });
+      res.status(404).json({ message: "İzin kaydı bulunamadı" });
       return;
+    }
+
+    if (req.body.status === "approved" || req.body.status === "rejected") {
+      const statusText =
+        req.body.status === "approved"
+          ? "onaylandı / approved"
+          : "reddedildi / rejected";
+      const empUser = await User.findOne({
+        email: (leave.employee as unknown as { email?: string })?.email,
+      });
+      if (empUser) {
+        await Notification.create({
+          recipient: empUser._id,
+          message: `İzin talebiniz ${statusText} / Your leave request was ${statusText.split(" / ")[1]}`,
+          link: "/leaves",
+        });
+      }
     }
 
     res.status(200).json(leave);
@@ -119,12 +141,10 @@ export const deleteLeave = async (
     const leave = await Leave.findByIdAndDelete(id);
 
     if (!leave) {
-      res
-        .status(404)
-        .json({
-          message:
-            "İzin kaydı bulunamadıİzin kaydı bulunamadı/Couldn't find leave request",
-        });
+      res.status(404).json({
+        message:
+          "İzin kaydı bulunamadıİzin kaydı bulunamadı/Couldn't find leave request",
+      });
       return;
     }
 
