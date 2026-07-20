@@ -3,6 +3,7 @@ import { Leave } from "../models/Leave";
 import { Employee } from "../models/Employee";
 import { AuthRequest } from "../middleware/authMIDDLEware";
 import { Notification } from "../models/Notification";
+import { sendEmail } from "../utils/sendEmail";
 import { User } from "../models/User";
 
 const calculateDays = (start: Date, end: Date): number => {
@@ -122,6 +123,26 @@ export const updateLeave = async (
           message: `İzin talebiniz ${statusText} / Your leave request was ${statusText.split(" / ")[1]}`,
           link: "/leaves",
         });
+
+        sendEmail(
+          empUser.email,
+          `İzin Talebiniz ${statusText.split(" / ")[0]} - Hitit CS`,
+          `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+            <div style="background: #a26534; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+              <h2 style="margin: 0;">Hitit CS</h2>
+            </div>
+            <div style="border: 1px solid #e2cdb0; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
+              <p>Merhaba <strong>${empUser.name}</strong>,</p>
+              <p>İzin talebiniz <strong>${statusText}</strong>.</p>
+              <p style="color: #666; font-size: 13px;">
+                Detaylar için sisteme giriş yapabilirsiniz. /
+                Please log in to the system for details.
+              </p>
+            </div>
+          </div>
+          `,
+        );
       }
     }
 
@@ -142,8 +163,7 @@ export const deleteLeave = async (
 
     if (!leave) {
       res.status(404).json({
-        message:
-          "İzin kaydı bulunamadıİzin kaydı bulunamadı/Couldn't find leave request",
+        message: "İzin kaydı bulunamadı/Couldn't find leave request",
       });
       return;
     }

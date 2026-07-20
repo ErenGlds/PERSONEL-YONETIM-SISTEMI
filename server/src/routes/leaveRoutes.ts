@@ -14,6 +14,6 @@ router.use(protect);
 router.get("/", getLeaves);
 router.delete("/:id", deleteLeave);
 router.put("/:id", updateLeave);
-router.post("/:id", createLeave);
+router.post("/", createLeave);
 
 export default router;
