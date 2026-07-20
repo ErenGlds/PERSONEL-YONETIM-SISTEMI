@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import NotificationBell from "@/components/NotificationBell";
 import { User } from "@/types";
 
 const subscribe = (callback: () => void) => {
@@ -49,11 +50,12 @@ export default function DashboardLayout({
     <div className="flex">
       <Sidebar />
       <div className="flex h-screen flex-1 flex-col overflow-hidden">
-        <header className="flex items-center justify-end border-b border-bronze-200 bg-white px-6 py-3">
+        <header className="flex items-center justify-end gap-4 border-b border-bronze-200 bg-white px-6 py-3">
           <div className="text-right">
             <p className="text-sm font-medium text-clay-800">{user?.name}</p>
             <p className="text-xs text-clay-700/60">{user?.role}</p>
           </div>
+          <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
