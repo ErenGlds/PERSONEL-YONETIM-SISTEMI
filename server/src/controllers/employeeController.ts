@@ -2,13 +2,14 @@ import { Response } from "express";
 import { Employee } from "../models/Employee";
 import { Department } from "../models/Department";
 import { AuthRequest } from "../middleware/authMIDDLEware";
+import { computeAvailability } from "../utils/availability";
 
 export const getEmployees = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
-    const { search, department, status } = req.query;
+    const { search, department } = req.query;
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.max(1, Number(req.query.limit) || 10);
 
@@ -22,7 +23,6 @@ export const getEmployees = async (
       ];
     }
     if (department) filter.department = department;
-    if (status) filter.status = status;
 
     const total = await Employee.countDocuments(filter);
 
@@ -32,8 +32,15 @@ export const getEmployees = async (
       .skip((page - 1) * limit)
       .limit(limit);
 
+    const withAvailability = await Promise.all(
+      employees.map(async (emp) => ({
+        ...emp.toObject(),
+        availability: await computeAvailability(emp),
+      })),
+    );
+
     res.status(200).json({
-      data: employees,
+      data: withAvailability,
       pagination: {
         total,
         page,
@@ -42,10 +49,9 @@ export const getEmployees = async (
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server error", error });
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };
-
 export const createEmployee = async (
   req: AuthRequest,
   res: Response,
@@ -60,6 +66,9 @@ export const createEmployee = async (
       position,
       salary,
       hireDate,
+      workDays,
+      workStart,
+      workEnd,
     } = req.body;
 
     const departmentExists = await Department.findById(department);
@@ -87,6 +96,9 @@ export const createEmployee = async (
       position,
       salary,
       hireDate,
+      workDays,
+      workStart,
+      workEnd,
     });
 
     const populated = await employee.populate("department", "name");

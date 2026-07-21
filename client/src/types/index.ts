@@ -15,7 +15,10 @@ export interface Employee {
   position: string;
   salary: number;
   hireDate: string;
-  status: "active" | "inactive";
+  workDays: number[];
+  workStart: string;
+  workEnd: string;
+  availability?: "on-leave" | "on-break" | "available" | "off-hours";
   createdAt: string;
 }
 
@@ -52,11 +55,18 @@ export interface AuthResponse {
 
 export interface DashboardStats {
   totalEmployees: number;
-  activeEmployees: number;
   totalDepartments: number;
   pendingLeaves: number;
   approvedLeaves: number;
   upcomingHolidays: number;
+  availableNow: number;
+  onLeaveNow: number;
+  availabilityCounts: {
+    available: number;
+    "on-break": number;
+    "on-leave": number;
+    "off-hours": number;
+  };
   employeesByDepartment: { name: string; count: number }[];
 }
 export interface Paginated<T> {

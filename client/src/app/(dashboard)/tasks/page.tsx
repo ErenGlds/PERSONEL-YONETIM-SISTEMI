@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { apiFetch, isAdmin } from "@/lib/api";
 import { Task, Employee, Holiday } from "@/types";
 import Modal from "@/components/modal";
@@ -85,6 +85,7 @@ export default function TasksPage() {
     fetchTasks();
     fetchHolidays();
     fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   type FormChangeEvent = React.ChangeEvent<
@@ -196,11 +197,8 @@ export default function TasksPage() {
               </tr>
             ) : (
               tasks.map((task) => (
-                <>
-                  <tr
-                    key={task._id}
-                    className="border-t border-bronze-100 hover:bg-bronze-50"
-                  >
+                <React.Fragment key={task._id}>
+                  <tr className="border-t border-bronze-100 hover:bg-bronze-50">
                     <td className="px-4 py-3">
                       <button
                         onClick={() =>
@@ -262,7 +260,7 @@ export default function TasksPage() {
                     </td>
                   </tr>
                   {expandedId === task._id && (
-                    <tr key={task._id + "-desc"} className="bg-bronze-50/40">
+                    <tr className="bg-bronze-50/40">
                       <td colSpan={6} className="px-4 py-3">
                         <div className="rounded-lg bg-white p-3 text-sm text-clay-700/90 shadow-sm">
                           <p className="mb-1 font-semibold text-clay-800">
@@ -279,7 +277,7 @@ export default function TasksPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))
             )}
           </tbody>

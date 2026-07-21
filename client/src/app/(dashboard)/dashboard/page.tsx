@@ -12,11 +12,7 @@ export default function DashboardPage() {
     apiFetch<DashboardStats>("/dashboard")
       .then((data) => setStats(data))
       .catch((err) =>
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Veriler alınamadı/Failed to retrieve data",
-        ),
+        setError(err instanceof Error ? err.message : "Veriler alınamadı"),
       );
   }, []);
 
@@ -25,45 +21,72 @@ export default function DashboardPage() {
   }
 
   if (!stats) {
-    return <p className="text-clay-700">Yükleniyor/Loading...</p>;
+    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
   }
 
   const cards = [
     {
-      title: "Toplam Çalışan/total Employees",
+      title: "Toplam Çalışan / Total Employees",
       value: stats.totalEmployees,
       icon: "👥",
     },
     {
-      title: "Aktif Çalışan/ Active Employees",
-      value: stats.activeEmployees,
-      icon: "✅",
+      title: "Şu An Müsait / Available Now",
+      value: stats.availableNow,
+      icon: "🟢",
     },
+    { title: "İzinde / On Leave", value: stats.onLeaveNow, icon: "🟡" },
     {
-      title: "Departman/Departmens",
+      title: "Departman / Departments",
       value: stats.totalDepartments,
       icon: "🏢",
     },
     {
-      title: "Bekleyen İzin/ Pending Leaves",
+      title: "Bekleyen İzin / Pending Leaves",
       value: stats.pendingLeaves,
       icon: "⏳",
     },
     {
-      title: "Onaylı İzin/ Approved Leaves",
-      value: stats.approvedLeaves,
-      icon: "📗",
-    },
-    {
-      title: "Yaklaşan Tatil/ Upcoming Holidays",
+      title: "Yaklaşan Tatil / Upcoming Holidays",
       value: stats.upcomingHolidays,
       icon: "🎉",
     },
   ];
 
+  const availabilityItems = [
+    {
+      key: "available",
+      label: "🟢 Müsait / Available",
+      value: stats.availabilityCounts.available,
+      color: "bg-green-500",
+    },
+    {
+      key: "on-break",
+      label: "🍽️ Molada / On Break",
+      value: stats.availabilityCounts["on-break"],
+      color: "bg-orange-500",
+    },
+    {
+      key: "on-leave",
+      label: "🟡 İzinde / On Leave",
+      value: stats.availabilityCounts["on-leave"],
+      color: "bg-amber-500",
+    },
+    {
+      key: "off-hours",
+      label: "⚫ Çalışma dışı / Off Hours",
+      value: stats.availabilityCounts["off-hours"],
+      color: "bg-gray-400",
+    },
+  ];
+
+  const totalForBar =
+    availabilityItems.reduce((sum, i) => sum + i.value, 0) || 1;
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-clay-800">Dashboard</h1>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <div
@@ -80,43 +103,71 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
-      <div className="mt-8 rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-clay-800">
-          Departmanlara Göre Çalışan Dağılımı/Employee Distribution by
-          Department
-        </h2>
 
-        {stats.employeesByDepartment.length === 0 ? (
-          <p className="text-sm text-clay-700/60">
-            Henüz veri yok/No data available yet
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {stats.employeesByDepartment.map((dept) => {
-              const max = Math.max(
-                ...stats.employeesByDepartment.map((d) => d.count),
-              );
-              const width = (dept.count / max) * 100;
-
-              return (
-                <div key={dept.name}>
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span className="text-clay-800">{dept.name}</span>
-                    <span className="font-medium text-bronze-700">
-                      {dept.count}
-                    </span>
-                  </div>
-                  <div className="h-2.5 rounded-full bg-bronze-100">
-                    <div
-                      className="h-2.5 rounded-full bg-bronze-600 transition-all"
-                      style={{ width: `${width}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-clay-800">
+            Personel Müsaitlik Durumu / Staff Availability
+          </h2>
+          <div className="mb-4 flex h-3 overflow-hidden rounded-full">
+            {availabilityItems.map((item) => (
+              <div
+                key={item.key}
+                className={item.color}
+                style={{ width: `${(item.value / totalForBar) * 100}%` }}
+              />
+            ))}
           </div>
-        )}
+          <div className="space-y-2">
+            {availabilityItems.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center justify-between text-sm"
+              >
+                <span className="text-clay-800">{item.label}</span>
+                <span className="font-medium text-bronze-700">
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-clay-800">
+            Departmanlara Göre Çalışan / Employees by Department
+          </h2>
+          {stats.employeesByDepartment.length === 0 ? (
+            <p className="text-sm text-clay-700/60">
+              Henüz veri yok. / No data yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {stats.employeesByDepartment.map((dept) => {
+                const max = Math.max(
+                  ...stats.employeesByDepartment.map((d) => d.count),
+                );
+                const width = (dept.count / max) * 100;
+                return (
+                  <div key={dept.name}>
+                    <div className="mb-1 flex justify-between text-sm">
+                      <span className="text-clay-800">{dept.name}</span>
+                      <span className="font-medium text-bronze-700">
+                        {dept.count}
+                      </span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-bronze-100">
+                      <div
+                        className="h-2.5 rounded-full bg-bronze-600"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 import { apiFetch, isAdmin } from "@/lib/api";
 import { Employee, Department, Paginated } from "@/types";
 import Modal from "@/components/modal";
+import AvailabilityBadge from "@/components/AvailabilityBadge";
+
+const weekDayOptions = [
+  { value: 1, label: "Pzt-Mon" },
+  { value: 2, label: "Sal-Tue" },
+  { value: 3, label: "Çar-Wed" },
+  { value: 4, label: "Per-Thu" },
+  { value: 5, label: "Cu-Fri" },
+  { value: 6, label: "Cmt-Sat" },
+  { value: 0, label: "Paz-Sun" },
+];
+
 const emptyForm = {
   firstName: "",
   lastName: "",
@@ -13,7 +25,9 @@ const emptyForm = {
   position: "",
   salary: "",
   hireDate: "",
-  status: "active",
+  workDays: [1, 2, 3, 4, 5] as number[],
+  workStart: "09:00",
+  workEnd: "18:00",
 };
 
 export default function EmployeesPage() {
@@ -26,7 +40,6 @@ export default function EmployeesPage() {
 
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -34,12 +47,12 @@ export default function EmployeesPage() {
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const fetchData = () => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (filterDept) params.set("department", filterDept);
-    if (filterStatus) params.set("status", filterStatus);
     params.set("page", String(page));
     params.set("limit", "10");
 
@@ -59,14 +72,24 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchData();
-  }, [search, filterDept, filterStatus, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterDept, page]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
-  ) => {
+  type FormChangeEvent = React.ChangeEvent<
+    HTMLInputElement | HTMLSelectElement
+  >;
+
+  const handleChange = (e: FormChangeEvent) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const toggleWorkDay = (day: number) => {
+    setForm((prev) => ({
+      ...prev,
+      workDays: prev.workDays.includes(day)
+        ? prev.workDays.filter((d) => d !== day)
+        : [...prev.workDays, day],
+    }));
   };
 
   const openModal = (emp: Employee | null = null) => {
@@ -82,16 +105,20 @@ export default function EmployeesPage() {
             position: emp.position,
             salary: String(emp.salary),
             hireDate: emp.hireDate.slice(0, 10),
-            status: emp.status,
+            workDays: emp.workDays ?? [1, 2, 3, 4, 5],
+            workStart: emp.workStart ?? "09:00",
+            workEnd: emp.workEnd ?? "18:00",
           }
         : emptyForm,
     );
+    setFormError("");
     setModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormError("");
     const payload = { ...form, salary: Number(form.salary) };
     try {
       if (editing) {
@@ -108,7 +135,9 @@ export default function EmployeesPage() {
       setModalOpen(false);
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Kaydedilemedi / Save failed");
+      setFormError(
+        err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
+      );
     } finally {
       setSaving(false);
     }
@@ -174,18 +203,6 @@ export default function EmployeesPage() {
             </option>
           ))}
         </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => {
-            setFilterStatus(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:outline-none"
-        >
-          <option value="">Tüm Durumlar / All Statuses</option>
-          <option value="active">Aktif / Active</option>
-          <option value="inactive">Pasif / Inactive</option>
-        </select>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm">
@@ -198,7 +215,7 @@ export default function EmployeesPage() {
                 Departman / Department
               </th>
               <th className="px-4 py-3 font-semibold">Pozisyon / Position</th>
-              <th className="px-4 py-3 font-semibold">Durum / Status</th>
+              <th className="px-4 py-3 font-semibold">Durum / Availability</th>
               {admin && (
                 <th className="px-4 py-3 text-right font-semibold">
                   İşlemler / Actions
@@ -231,17 +248,7 @@ export default function EmployeesPage() {
                   </td>
                   <td className="px-4 py-3 text-clay-700/80">{emp.position}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        emp.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {emp.status === "active"
-                        ? "Aktif / Active"
-                        : "Pasif / Inactive"}
-                    </span>
+                    <AvailabilityBadge availability={emp.availability} />
                   </td>
                   {admin && (
                     <td className="px-4 py-3 text-right">
@@ -296,6 +303,11 @@ export default function EmployeesPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
@@ -393,15 +405,51 @@ export default function EmployeesPage() {
               />
             </div>
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-clay-700">
+              İşe Giriş / Hire Date *
+            </label>
+            <input
+              type="date"
+              name="hireDate"
+              value={form.hireDate}
+              onChange={handleChange}
+              required
+              className={inputCls}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-clay-700">
+              Çalışma Günleri / Work Days *
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {weekDayOptions.map((wd) => (
+                <button
+                  key={wd.value}
+                  type="button"
+                  onClick={() => toggleWorkDay(wd.value)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                    form.workDays.includes(wd.value)
+                      ? "border-bronze-600 bg-bronze-600 text-white"
+                      : "border-bronze-200 text-clay-700 hover:bg-bronze-50"
+                  }`}
+                >
+                  {wd.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                İşe Giriş / Hire Date *
+                Başlangıç / Start *
               </label>
               <input
-                type="date"
-                name="hireDate"
-                value={form.hireDate}
+                type="time"
+                name="workStart"
+                value={form.workStart}
                 onChange={handleChange}
                 required
                 className={inputCls}
@@ -409,19 +457,23 @@ export default function EmployeesPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-clay-700">
-                Durum / Status
+                Bitiş / End *
               </label>
-              <select
-                name="status"
-                value={form.status}
+              <input
+                type="time"
+                name="workEnd"
+                value={form.workEnd}
                 onChange={handleChange}
+                required
                 className={inputCls}
-              >
-                <option value="active">Aktif / Active</option>
-                <option value="inactive">Pasif / Inactive</option>
-              </select>
+              />
             </div>
           </div>
+          <p className="text-xs text-clay-700/50">
+            🍽️ Öğle arası 12:00–13:00 otomatik uygulanır. / Lunch break
+            12:00–13:00 is automatic.
+          </p>
+
           <button
             type="submit"
             disabled={saving}
