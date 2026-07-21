@@ -68,3 +68,21 @@ export interface Paginated<T> {
     totalPages: number;
   };
 }
+export interface Task {
+  _id: string;
+  title: string;
+  description?: string;
+  assignedTo: { _id: string; name: string; email: string };
+  dueDate: string;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "in-progress" | "done";
+  createdBy: { _id: string; name: string };
+  createdAt: string;
+}
+
+export interface UserOption {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}

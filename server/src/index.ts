@@ -10,7 +10,7 @@ import holidayRoutes from "./routes/holidayRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import { errorHandler } from "./middleware/errorMiddleware";
 import notificationRoutes from "./routes/notificationRoutes";
-
+import taskRoutes from "./routes/TaskRoutes";
 dotenv.config();
 
 const app = express();
@@ -30,6 +30,7 @@ app.use("/api/leaves", leaveRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/tasks", taskRoutes);
 app.use(errorHandler);
 
 const startServer = async (): Promise<void> => {

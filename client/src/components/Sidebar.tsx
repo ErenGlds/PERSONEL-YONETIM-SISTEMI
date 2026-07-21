@@ -10,6 +10,7 @@ const menuItems = [
   { name: "Çalışanlar-Employees", path: "/employees", icon: "👥" },
   { name: "İzinler-Leaves", path: "/leaves", icon: "📅" },
   { name: "Tatiller-Holidays", path: "/holidays", icon: "🎉" },
+  { name: "Görevler-Tasks", path: "/tasks", icon: "📋" },
 ];
 
 export default function Sidebar() {
@@ -24,7 +25,6 @@ export default function Sidebar() {
 
   return (
     <aside className="flex h-screen w-64 flex-col bg-clay-900 text-bronze-100">
-      {/* Logo */}
       <div className="border-b border-clay-700 p-6">
         <h1 className="text-2xl font-bold text-bronze-400">Hitit CS</h1>
         <p className="mt-1 text-xs text-bronze-200/60">
