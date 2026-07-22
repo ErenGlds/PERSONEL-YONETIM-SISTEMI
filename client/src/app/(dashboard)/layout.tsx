@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import NotificationBell from "@/components/NotificationBell";
+import ChatBot from "@/components/ChatBot";
 import { User } from "@/types";
 
 const subscribe = (callback: () => void) => {
@@ -59,6 +60,7 @@ export default function DashboardLayout({
         </header>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
+      <ChatBot />
     </div>
   );
 }
