@@ -21,7 +21,7 @@ export const getLeaves = async (
       .sort({ createdAt: -1 });
     res.status(200).json(leaves);
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server Error", error });
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };
 
@@ -34,7 +34,7 @@ export const createLeave = async (
 
     const employeeExists = await Employee.findById(employee);
     if (!employeeExists) {
-      res.status(400).json({ message: "Geçersiz çalışan/Invalid employee" });
+      res.status(400).json({ message: "Geçersiz çalışan / Invalid employee" });
       return;
     }
 
@@ -44,7 +44,32 @@ export const createLeave = async (
     if (end < start) {
       res.status(400).json({
         message:
-          "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
+          "Bitiş tarihi başlangıçtan önce olamaz / End date cannot be before start date",
+      });
+      return;
+    }
+
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    if (start < todayMidnight) {
+      res.status(400).json({
+        message:
+          "Geçmiş tarihe izin oluşturulamaz / Cannot create leave in the past",
+      });
+      return;
+    }
+
+    const overlapping = await Leave.findOne({
+      employee,
+      status: { $in: ["pending", "approved"] },
+      startDate: { $lte: end },
+      endDate: { $gte: start },
+    });
+
+    if (overlapping) {
+      res.status(400).json({
+        message: `Bu tarihlerde zaten bir izin kaydı var (${new Date(overlapping.startDate).toLocaleDateString("tr-TR")} - ${new Date(overlapping.endDate).toLocaleDateString("tr-TR")}) / Overlapping leave already exists`,
       });
       return;
     }
@@ -69,10 +94,11 @@ export const createLeave = async (
         link: "/leaves",
       })),
     );
+
     const populated = await leave.populate("employee", "firstName lastName");
     res.status(201).json(populated);
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server Error", error });
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };
 
@@ -91,7 +117,7 @@ export const updateLeave = async (
       if (end < start) {
         res.status(400).json({
           message:
-            "Bitiş tarihi başlangıçtan önce olamaz/ End date can't be before star date",
+            "Bitiş tarihi başlangıçtan önce olamaz / End date cannot be before start date",
         });
         return;
       }
@@ -105,7 +131,9 @@ export const updateLeave = async (
     }).populate("employee", "firstName lastName email");
 
     if (!leave) {
-      res.status(404).json({ message: "İzin kaydı bulunamadı" });
+      res.status(404).json({
+        message: "İzin kaydı bulunamadı / Leave record not found",
+      });
       return;
     }
 
@@ -148,7 +176,7 @@ export const updateLeave = async (
 
     res.status(200).json(leave);
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server error", error });
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };
 
@@ -163,15 +191,15 @@ export const deleteLeave = async (
 
     if (!leave) {
       res.status(404).json({
-        message: "İzin kaydı bulunamadı/Couldn't find leave request",
+        message: "İzin kaydı bulunamadı / Leave record not found",
       });
       return;
     }
 
     res
       .status(200)
-      .json({ message: "İzin kaydı silindi/Leave record deleted" });
+      .json({ message: "İzin kaydı silindi / Leave record deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Sunucu hatası/Server error", error });
+    res.status(500).json({ message: "Sunucu hatası / Server error", error });
   }
 };

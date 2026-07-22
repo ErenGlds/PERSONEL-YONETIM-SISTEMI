@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiFetch, isAdmin } from "@/lib/api";
 import { Leave, Employee, Paginated } from "@/types";
 import Modal from "@/components/modal";
+import { useToast } from "@/components/ToastProvider";
 
 const leaveTypeLabels: Record<Leave["leaveType"], string> = {
   annual: "Yıllık / annual",
@@ -34,6 +35,7 @@ const emptyForm = {
 
 export default function LeavesPage() {
   const admin = isAdmin();
+  const { showToast } = useToast();
 
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -83,6 +85,7 @@ export default function LeavesPage() {
       setModalOpen(false);
       setForm(emptyForm);
       fetchData();
+      showToast("İzin talebi oluşturuldu / Leave created", "success");
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
@@ -99,9 +102,11 @@ export default function LeavesPage() {
         body: JSON.stringify({ status }),
       });
       fetchData();
+      showToast("İzin durumu güncellendi / Leave status updated", "success");
     } catch (err) {
-      alert(
+      showToast(
         err instanceof Error ? err.message : "Güncellenemedi / Update failed",
+        "error",
       );
     }
   };
@@ -111,12 +116,18 @@ export default function LeavesPage() {
     try {
       await apiFetch(`/leaves/${leave._id}`, { method: "DELETE" });
       fetchData();
+      showToast("İzin kaydı silindi / Leave deleted", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
+      showToast(
+        err instanceof Error ? err.message : "Silinemedi / Delete failed",
+        "error",
+      );
     }
   };
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString("tr-TR");
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const inputCls =
     "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
@@ -287,6 +298,7 @@ export default function LeavesPage() {
                 value={form.startDate}
                 onChange={handleChange}
                 required
+                min={todayStr}
                 className={inputCls}
               />
             </div>
@@ -300,6 +312,7 @@ export default function LeavesPage() {
                 value={form.endDate}
                 onChange={handleChange}
                 required
+                min={form.startDate || todayStr}
                 className={inputCls}
               />
             </div>
