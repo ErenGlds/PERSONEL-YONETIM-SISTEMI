@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { apiFetch, isAdmin } from "@/lib/api";
 import { Department } from "@/types";
 import Modal from "@/components/modal";
+import { useToast } from "@/components/ToastProvider";
 
 export default function DepartmentsPage() {
   const admin = isAdmin();
+  const { showToast } = useToast();
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,12 @@ export default function DepartmentsPage() {
       }
       setModalOpen(false);
       fetchDepartments();
+      showToast(
+        editing
+          ? "Departman güncellendi / Department updated"
+          : "Departman eklendi / Department created",
+        "success",
+      );
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
@@ -74,35 +82,50 @@ export default function DepartmentsPage() {
     try {
       await apiFetch(`/departments/${dept._id}`, { method: "DELETE" });
       fetchDepartments();
+      showToast("Departman silindi / Department deleted", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
+      showToast(
+        err instanceof Error ? err.message : "Silinemedi / Delete failed",
+        "error",
+      );
     }
   };
 
+  const inputCls =
+    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100";
+
   if (loading)
-    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
+    return (
+      <p className="text-clay-700 dark:text-bronze-200">
+        Yükleniyor... / Loading...
+      </p>
+    );
   if (error)
-    return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {error}
+      </div>
+    );
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">
+        <h1 className="text-2xl font-bold text-clay-800 dark:text-bronze-100">
           Departmanlar / Departments
         </h1>
         {admin && (
           <button
             onClick={() => openModal()}
-            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             + Yeni Departman / New Department
           </button>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-sm dark:border-clay-800 dark:bg-clay-900">
         <table className="w-full text-left text-sm">
-          <thead className="bg-bronze-100 text-clay-800">
+          <thead className="bg-bronze-100 text-clay-800 dark:bg-clay-800 dark:text-bronze-100">
             <tr>
               <th className="px-4 py-3 font-semibold">Ad / Name</th>
               <th className="px-4 py-3 font-semibold">
@@ -120,7 +143,7 @@ export default function DepartmentsPage() {
               <tr>
                 <td
                   colSpan={admin ? 3 : 2}
-                  className="px-4 py-8 text-center text-clay-700/60"
+                  className="px-4 py-8 text-center text-clay-700/60 dark:text-bronze-200/50"
                 >
                   Henüz departman yok. / No departments yet. 🏢
                 </td>
@@ -129,25 +152,25 @@ export default function DepartmentsPage() {
               departments.map((dept) => (
                 <tr
                   key={dept._id}
-                  className="border-t border-bronze-100 hover:bg-bronze-50"
+                  className="border-t border-bronze-100 hover:bg-bronze-50 dark:border-clay-800 dark:hover:bg-clay-800"
                 >
-                  <td className="px-4 py-3 font-medium text-clay-800">
+                  <td className="px-4 py-3 font-medium text-clay-800 dark:text-bronze-100">
                     {dept.name}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                     {dept.description || "—"}
                   </td>
                   {admin && (
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => openModal(dept)}
-                        className="mr-3 text-bronze-700 hover:underline"
+                        className="mr-3 text-bronze-700 hover:underline dark:text-bronze-400"
                       >
                         Düzenle / Edit
                       </button>
                       <button
                         onClick={() => handleDelete(dept)}
-                        className="text-red-600 hover:underline"
+                        className="text-red-600 hover:underline dark:text-red-400"
                       >
                         Sil / Delete
                       </button>
@@ -171,36 +194,36 @@ export default function DepartmentsPage() {
       >
         <form onSubmit={handleSubmit}>
           {formError && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
               {formError}
             </div>
           )}
           <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Ad / Name *
             </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300"
+              className={inputCls}
             />
           </div>
           <div className="mb-6">
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Açıklama / Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300"
+              className={inputCls}
             />
           </div>
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>

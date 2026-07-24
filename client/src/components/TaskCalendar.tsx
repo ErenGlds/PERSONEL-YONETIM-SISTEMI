@@ -9,15 +9,7 @@ const priorityDot: Record<Task["priority"], string> = {
   high: "bg-red-500",
 };
 
-const weekDays = [
-  "Pzt-Mon",
-  "Sal-Tue",
-  "Çar-Wed",
-  "Per-Thu",
-  "Cu-Fri",
-  "Cmt_Sat",
-  "Paz-Sun",
-];
+const weekDays = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
 export default function TaskCalendar({
   tasks,
@@ -73,20 +65,20 @@ export default function TaskCalendar({
     today.getDate() === day;
 
   return (
-    <div className="rounded-xl border border-bronze-200 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-bronze-200 bg-white p-4 shadow-sm dark:border-clay-800 dark:bg-clay-900">
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={() => setCurrent(new Date(year, month - 1, 1))}
-          className="rounded-lg border border-bronze-200 px-3 py-1 text-sm hover:bg-bronze-50"
+          className="rounded-lg border border-bronze-200 px-3 py-1 text-sm hover:bg-bronze-50 dark:border-clay-700 dark:text-bronze-200 dark:hover:bg-clay-800"
         >
           ← Önceki / Prev
         </button>
-        <h3 className="text-lg font-semibold capitalize text-clay-800">
+        <h3 className="text-lg font-semibold capitalize text-clay-800 dark:text-bronze-100">
           {monthName}
         </h3>
         <button
           onClick={() => setCurrent(new Date(year, month + 1, 1))}
-          className="rounded-lg border border-bronze-200 px-3 py-1 text-sm hover:bg-bronze-50"
+          className="rounded-lg border border-bronze-200 px-3 py-1 text-sm hover:bg-bronze-50 dark:border-clay-700 dark:text-bronze-200 dark:hover:bg-clay-800"
         >
           Sonraki / Next →
         </button>
@@ -96,7 +88,7 @@ export default function TaskCalendar({
         {weekDays.map((wd) => (
           <div
             key={wd}
-            className="py-2 text-center text-xs font-semibold text-clay-700/60"
+            className="py-2 text-center text-xs font-semibold text-clay-700/60 dark:text-bronze-200/60"
           >
             {wd}
           </div>
@@ -109,20 +101,20 @@ export default function TaskCalendar({
               day === null
                 ? "border-transparent"
                 : isToday(day)
-                  ? "border-bronze-500 bg-bronze-50"
-                  : "border-bronze-100"
+                  ? "border-bronze-500 bg-bronze-50 dark:bg-clay-800"
+                  : "border-bronze-100 dark:border-clay-800"
             }`}
           >
             {day !== null && (
               <>
-                <div className="mb-1 text-xs font-medium text-clay-700/70">
+                <div className="mb-1 text-xs font-medium text-clay-700/70 dark:text-bronze-200/60">
                   {day}
                 </div>
                 <div className="space-y-0.5">
                   {holidaysForDay(day).map((h) => (
                     <div
                       key={h._id}
-                      className="truncate rounded bg-purple-100 px-1 py-0.5 text-[10px] text-purple-700"
+                      className="truncate rounded bg-purple-100 px-1 py-0.5 text-[10px] text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
                       title={h.name}
                     >
                       🎉 {h.name}
@@ -135,8 +127,8 @@ export default function TaskCalendar({
                         key={t._id}
                         className={`flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] ${
                           t.status === "done"
-                            ? "bg-gray-100 text-gray-400 line-through"
-                            : "bg-bronze-100/60 text-clay-800"
+                            ? "bg-gray-100 text-gray-400 line-through dark:bg-clay-800 dark:text-bronze-200/40"
+                            : "bg-bronze-100/60 text-clay-800 dark:bg-bronze-900/40 dark:text-bronze-100"
                         }`}
                         title={
                           t.description
@@ -151,7 +143,7 @@ export default function TaskCalendar({
                       </div>
                     ))}
                   {tasksForDay(day).length > 3 && (
-                    <div className="text-[10px] text-clay-700/50">
+                    <div className="text-[10px] text-clay-700/50 dark:text-bronze-200/40">
                       +{tasksForDay(day).length - 3} daha
                     </div>
                   )}
@@ -162,7 +154,7 @@ export default function TaskCalendar({
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-clay-700/70">
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-clay-700/70 dark:text-bronze-200/60">
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-green-500" /> Düşük / low
         </span>
@@ -173,7 +165,9 @@ export default function TaskCalendar({
           <span className="h-2 w-2 rounded-full bg-red-500" /> Yüksek / high
         </span>
         <span className="flex items-center gap-1">
-          <span className="rounded bg-purple-100 px-1 text-purple-700">🎉</span>{" "}
+          <span className="rounded bg-purple-100 px-1 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+            🎉
+          </span>{" "}
           Tatil / Holiday
         </span>
       </div>

@@ -5,15 +5,16 @@ import { apiFetch, isAdmin } from "@/lib/api";
 import { Employee, Department, Paginated } from "@/types";
 import Modal from "@/components/modal";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
+import { useToast } from "@/components/ToastProvider";
 
 const weekDayOptions = [
-  { value: 1, label: "Pzt-Mon" },
-  { value: 2, label: "Sal-Tue" },
-  { value: 3, label: "Çar-Wed" },
-  { value: 4, label: "Per-Thu" },
-  { value: 5, label: "Cu-Fri" },
-  { value: 6, label: "Cmt-Sat" },
-  { value: 0, label: "Paz-Sun" },
+  { value: 1, label: "Pzt" },
+  { value: 2, label: "Sal" },
+  { value: 3, label: "Çar" },
+  { value: 4, label: "Per" },
+  { value: 5, label: "Cum" },
+  { value: 6, label: "Cmt" },
+  { value: 0, label: "Paz" },
 ];
 
 const emptyForm = {
@@ -32,6 +33,7 @@ const emptyForm = {
 
 export default function EmployeesPage() {
   const admin = isAdmin();
+  const { showToast } = useToast();
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -134,6 +136,12 @@ export default function EmployeesPage() {
       }
       setModalOpen(false);
       fetchData();
+      showToast(
+        editing
+          ? "Çalışan güncellendi / Employee updated"
+          : "Çalışan eklendi / Employee created",
+        "success",
+      );
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
@@ -149,29 +157,41 @@ export default function EmployeesPage() {
     try {
       await apiFetch(`/employees/${emp._id}`, { method: "DELETE" });
       fetchData();
+      showToast("Çalışan silindi / Employee deleted", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
+      showToast(
+        err instanceof Error ? err.message : "Silinemedi / Delete failed",
+        "error",
+      );
     }
   };
 
   const inputCls =
-    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
+    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100";
 
   if (loading)
-    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
+    return (
+      <p className="text-clay-700 dark:text-bronze-200">
+        Yükleniyor... / Loading...
+      </p>
+    );
   if (error)
-    return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {error}
+      </div>
+    );
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">
+        <h1 className="text-2xl font-bold text-clay-800 dark:text-bronze-100">
           Çalışanlar / Employees
         </h1>
         {admin && (
           <button
             onClick={() => openModal()}
-            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             + Yeni Çalışan / New Employee
           </button>
@@ -186,7 +206,7 @@ export default function EmployeesPage() {
             setPage(1);
           }}
           placeholder="Ara (ad, e-posta)... / Search..."
-          className="w-64 rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300"
+          className="w-64 rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100 dark:placeholder:text-bronze-200/40"
         />
         <select
           value={filterDept}
@@ -194,7 +214,7 @@ export default function EmployeesPage() {
             setFilterDept(e.target.value);
             setPage(1);
           }}
-          className="rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:outline-none"
+          className="rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:outline-none dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100"
         >
           <option value="">Tüm Departmanlar / All Departments</option>
           {departments.map((d) => (
@@ -205,9 +225,9 @@ export default function EmployeesPage() {
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm dark:border-clay-800 dark:bg-clay-900">
         <table className="w-full text-left text-sm">
-          <thead className="bg-bronze-100 text-clay-800">
+          <thead className="bg-bronze-100 text-clay-800 dark:bg-clay-800 dark:text-bronze-100">
             <tr>
               <th className="px-4 py-3 font-semibold">Ad Soyad / Name</th>
               <th className="px-4 py-3 font-semibold">E-posta / Email</th>
@@ -228,7 +248,7 @@ export default function EmployeesPage() {
               <tr>
                 <td
                   colSpan={admin ? 6 : 5}
-                  className="px-4 py-8 text-center text-clay-700/60"
+                  className="px-4 py-8 text-center text-clay-700/60 dark:text-bronze-200/50"
                 >
                   Sonuç bulunamadı. / No results. 👥
                 </td>
@@ -237,16 +257,20 @@ export default function EmployeesPage() {
               employees.map((emp) => (
                 <tr
                   key={emp._id}
-                  className="border-t border-bronze-100 hover:bg-bronze-50"
+                  className="border-t border-bronze-100 hover:bg-bronze-50 dark:border-clay-800 dark:hover:bg-clay-800"
                 >
-                  <td className="px-4 py-3 font-medium text-clay-800">
+                  <td className="px-4 py-3 font-medium text-clay-800 dark:text-bronze-100">
                     {emp.firstName} {emp.lastName}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">{emp.email}</td>
-                  <td className="px-4 py-3 text-clay-700/80">
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
+                    {emp.email}
+                  </td>
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                     {emp.department?.name ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">{emp.position}</td>
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
+                    {emp.position}
+                  </td>
                   <td className="px-4 py-3">
                     <AvailabilityBadge availability={emp.availability} />
                   </td>
@@ -254,13 +278,13 @@ export default function EmployeesPage() {
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => openModal(emp)}
-                        className="mr-3 text-bronze-700 hover:underline"
+                        className="mr-3 text-bronze-700 hover:underline dark:text-bronze-400"
                       >
                         Düzenle / Edit
                       </button>
                       <button
                         onClick={() => handleDelete(emp)}
-                        className="text-red-600 hover:underline"
+                        className="text-red-600 hover:underline dark:text-red-400"
                       >
                         Sil / Delete
                       </button>
@@ -277,17 +301,17 @@ export default function EmployeesPage() {
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page <= 1}
-          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40"
+          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-200 dark:hover:bg-clay-800"
         >
           ← Önceki / Prev
         </button>
-        <span className="text-clay-700">
+        <span className="text-clay-700 dark:text-bronze-200">
           Sayfa / Page {page} / {totalPages || 1}
         </span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page >= totalPages}
-          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40"
+          className="rounded-lg border border-bronze-200 bg-white px-3 py-1.5 transition hover:bg-bronze-50 disabled:opacity-40 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-200 dark:hover:bg-clay-800"
         >
           Sonraki / Next →
         </button>
@@ -304,13 +328,13 @@ export default function EmployeesPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
               {formError}
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Ad / First Name *
               </label>
               <input
@@ -322,7 +346,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Soyad / Last Name *
               </label>
               <input
@@ -335,7 +359,7 @@ export default function EmployeesPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               E-posta / Email *
             </label>
             <input
@@ -348,18 +372,23 @@ export default function EmployeesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Telefon / Phone
             </label>
             <input
               name="phone"
+              type="tel"
               value={form.phone}
-              onChange={handleChange}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^0-9+\s]/g, "");
+                setForm({ ...form, phone: cleaned });
+              }}
+              placeholder="05XX XXX XX XX"
               className={inputCls}
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Departman / Department *
             </label>
             <select
@@ -379,7 +408,7 @@ export default function EmployeesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Pozisyon / Position *
               </label>
               <input
@@ -391,7 +420,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Maaş / Salary *
               </label>
               <input
@@ -406,7 +435,7 @@ export default function EmployeesPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               İşe Giriş / Hire Date *
             </label>
             <input
@@ -420,7 +449,7 @@ export default function EmployeesPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-clay-700">
+            <label className="mb-2 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Çalışma Günleri / Work Days *
             </label>
             <div className="flex flex-wrap gap-2">
@@ -431,8 +460,8 @@ export default function EmployeesPage() {
                   onClick={() => toggleWorkDay(wd.value)}
                   className={`rounded-lg border px-3 py-1.5 text-sm transition ${
                     form.workDays.includes(wd.value)
-                      ? "border-bronze-600 bg-bronze-600 text-white"
-                      : "border-bronze-200 text-clay-700 hover:bg-bronze-50"
+                      ? "border-bronze-600 bg-bronze-600 text-white dark:border-bronze-500 dark:bg-bronze-500"
+                      : "border-bronze-200 text-clay-700 hover:bg-bronze-50 dark:border-clay-700 dark:text-bronze-200 dark:hover:bg-clay-700"
                   }`}
                 >
                   {wd.label}
@@ -443,7 +472,7 @@ export default function EmployeesPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Başlangıç / Start *
               </label>
               <input
@@ -456,7 +485,7 @@ export default function EmployeesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Bitiş / End *
               </label>
               <input
@@ -469,7 +498,7 @@ export default function EmployeesPage() {
               />
             </div>
           </div>
-          <p className="text-xs text-clay-700/50">
+          <p className="text-xs text-clay-700/50 dark:text-bronze-200/40">
             🍽️ Öğle arası 12:00–13:00 otomatik uygulanır. / Lunch break
             12:00–13:00 is automatic.
           </p>
@@ -477,7 +506,7 @@ export default function EmployeesPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>

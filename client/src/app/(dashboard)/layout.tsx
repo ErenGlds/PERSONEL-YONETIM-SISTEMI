@@ -6,6 +6,8 @@ import Sidebar from "@/components/Sidebar";
 import NotificationBell from "@/components/NotificationBell";
 import ChatBot from "@/components/ChatBot";
 import ToastProvider from "@/components/ToastProvider";
+import ThemeProvider from "@/components/ThemeProvider";
+import ThemeToggle from "@/components/ThemeToggle";
 import { User } from "@/types";
 
 const subscribe = (callback: () => void) => {
@@ -43,27 +45,36 @@ export default function DashboardLayout({
   if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-clay-700">Yükleniyor... / Loading...</p>
+        <p className="text-clay-700 dark:text-bronze-200">
+          Yükleniyor... / Loading...
+        </p>
       </div>
     );
   }
 
   return (
-    <ToastProvider>
-      <div className="flex">
-        <Sidebar />
-        <div className="flex h-screen flex-1 flex-col overflow-hidden">
-          <header className="flex items-center justify-end gap-4 border-b border-bronze-200 bg-white px-6 py-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-clay-800">{user?.name}</p>
-              <p className="text-xs text-clay-700/60">{user?.role}</p>
-            </div>
-            <NotificationBell />
-          </header>
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <ThemeProvider>
+      <ToastProvider>
+        <div className="flex">
+          <Sidebar />
+          <div className="flex h-screen flex-1 flex-col overflow-hidden">
+            <header className="flex items-center justify-end gap-3 border-b border-bronze-200 bg-white px-6 py-3 dark:border-clay-800 dark:bg-clay-900">
+              <div className="text-right">
+                <p className="text-sm font-medium text-clay-800 dark:text-bronze-100">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-clay-700/60 dark:text-bronze-200/50">
+                  {user?.role}
+                </p>
+              </div>
+              <ThemeToggle />
+              <NotificationBell />
+            </header>
+            <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          </div>
+          <ChatBot />
         </div>
-        <ChatBot />
-      </div>
-    </ToastProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

@@ -50,8 +50,8 @@ export default function ChatBot() {
           role: "assistant",
           content:
             err instanceof Error
-              ? ` ${err.message}`
-              : " Bir hata oluştu / An error occurred",
+              ? `⚠️ ${err.message}`
+              : "⚠️ Bir hata oluştu / An error occurred",
         },
       ]);
     } finally {
@@ -68,15 +68,15 @@ export default function ChatBot() {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-bronze-600 text-2xl text-white shadow-lg transition hover:bg-bronze-700"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-bronze-600 text-2xl text-white shadow-lg transition hover:bg-bronze-700 dark:bg-bronze-500 dark:hover:bg-bronze-600"
         title="AI Asistan"
       >
         {open ? "✕" : "🤖"}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-96 flex-col overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-2xl">
-          <div className="border-b border-bronze-100 bg-clay-900 px-4 py-3">
+        <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-96 flex-col overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-2xl dark:border-clay-700 dark:bg-clay-800">
+          <div className="border-b border-bronze-100 bg-clay-900 px-4 py-3 dark:border-clay-700 dark:bg-clay-950">
             <h3 className="font-semibold text-bronze-100">
               🤖 Hitit CS Asistan
             </h3>
@@ -85,10 +85,10 @@ export default function ChatBot() {
             </p>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto bg-bronze-50/40 p-4">
+          <div className="flex-1 space-y-3 overflow-y-auto bg-bronze-50/40 p-4 dark:bg-clay-900/40">
             {messages.length === 0 && (
               <div className="space-y-3">
-                <p className="text-center text-sm text-clay-700/60">
+                <p className="text-center text-sm text-clay-700/60 dark:text-bronze-200/60">
                   Merhaba! Personel sistemi hakkında soru sorabilirsiniz.
                 </p>
                 <div className="space-y-2">
@@ -96,7 +96,7 @@ export default function ChatBot() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="block w-full rounded-lg border border-bronze-200 bg-white px-3 py-2 text-left text-sm text-clay-700 transition hover:bg-bronze-50"
+                      className="block w-full rounded-lg border border-bronze-200 bg-white px-3 py-2 text-left text-sm text-clay-700 transition hover:bg-bronze-50 dark:border-clay-700 dark:bg-clay-800 dark:text-bronze-200 dark:hover:bg-clay-700"
                     >
                       {s}
                     </button>
@@ -113,8 +113,8 @@ export default function ChatBot() {
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm ${
                     m.role === "user"
-                      ? "bg-bronze-600 text-white"
-                      : "border border-bronze-100 bg-white text-clay-800"
+                      ? "bg-bronze-600 text-white dark:bg-bronze-500"
+                      : "border border-bronze-100 bg-white text-clay-800 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100"
                   }`}
                 >
                   {m.content}
@@ -124,7 +124,7 @@ export default function ChatBot() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="rounded-xl border border-bronze-100 bg-white px-3 py-2 text-sm text-clay-700/60">
+                <div className="rounded-xl border border-bronze-100 bg-white px-3 py-2 text-sm text-clay-700/60 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-200/60">
                   <span className="inline-flex gap-1">
                     <span className="animate-bounce">●</span>
                     <span className="animate-bounce [animation-delay:0.15s]">
@@ -143,18 +143,18 @@ export default function ChatBot() {
 
           <form
             onSubmit={handleSubmit}
-            className="flex gap-2 border-t border-bronze-100 bg-white p-3"
+            className="flex gap-2 border-t border-bronze-100 bg-white p-3 dark:border-clay-700 dark:bg-clay-800"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Sorunuzu yazın... / Ask a question..."
-              className="flex-1 rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:border-bronze-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-bronze-200 px-3 py-2 text-sm focus:border-bronze-500 focus:outline-none dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100 dark:placeholder:text-bronze-200/40"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
+              className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50 dark:bg-bronze-500 dark:hover:bg-bronze-600"
             >
               Gönder
             </button>

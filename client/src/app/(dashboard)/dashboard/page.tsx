@@ -17,11 +17,19 @@ export default function DashboardPage() {
   }, []);
 
   if (error) {
-    return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {error}
+      </div>
+    );
   }
 
   if (!stats) {
-    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
+    return (
+      <p className="text-clay-700 dark:text-bronze-200">
+        Yükleniyor... / Loading...
+      </p>
+    );
   }
 
   const cards = [
@@ -85,19 +93,23 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-clay-800">Dashboard</h1>
+      <h1 className="mb-6 text-2xl font-bold text-clay-800 dark:text-bronze-100">
+        Dashboard
+      </h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <div
             key={card.title}
-            className="rounded-xl border border-bronze-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+            className="rounded-xl border border-bronze-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-clay-800 dark:bg-clay-900"
           >
             <div className="flex items-center justify-between">
-              <p className="text-sm text-clay-700/70">{card.title}</p>
+              <p className="text-sm text-clay-700/70 dark:text-bronze-200/60">
+                {card.title}
+              </p>
               <span className="text-2xl">{card.icon}</span>
             </div>
-            <p className="mt-2 text-3xl font-bold text-bronze-700">
+            <p className="mt-2 text-3xl font-bold text-bronze-700 dark:text-bronze-400">
               {card.value}
             </p>
           </div>
@@ -105,11 +117,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-clay-800">
+        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm dark:border-clay-800 dark:bg-clay-900">
+          <h2 className="mb-4 text-lg font-semibold text-clay-800 dark:text-bronze-100">
             Personel Müsaitlik Durumu / Staff Availability
           </h2>
-          <div className="mb-4 flex h-3 overflow-hidden rounded-full">
+          <div className="mb-4 flex h-3 overflow-hidden rounded-full bg-bronze-100 dark:bg-clay-800">
             {availabilityItems.map((item) => (
               <div
                 key={item.key}
@@ -124,8 +136,10 @@ export default function DashboardPage() {
                 key={item.key}
                 className="flex items-center justify-between text-sm"
               >
-                <span className="text-clay-800">{item.label}</span>
-                <span className="font-medium text-bronze-700">
+                <span className="text-clay-800 dark:text-bronze-200">
+                  {item.label}
+                </span>
+                <span className="font-medium text-bronze-700 dark:text-bronze-400">
                   {item.value}
                 </span>
               </div>
@@ -133,12 +147,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-clay-800">
+        <div className="rounded-xl border border-bronze-200 bg-white p-6 shadow-sm dark:border-clay-800 dark:bg-clay-900">
+          <h2 className="mb-4 text-lg font-semibold text-clay-800 dark:text-bronze-100">
             Departmanlara Göre Çalışan / Employees by Department
           </h2>
           {stats.employeesByDepartment.length === 0 ? (
-            <p className="text-sm text-clay-700/60">
+            <p className="text-sm text-clay-700/60 dark:text-bronze-200/50">
               Henüz veri yok. / No data yet.
             </p>
           ) : (
@@ -151,14 +165,16 @@ export default function DashboardPage() {
                 return (
                   <div key={dept.name}>
                     <div className="mb-1 flex justify-between text-sm">
-                      <span className="text-clay-800">{dept.name}</span>
-                      <span className="font-medium text-bronze-700">
+                      <span className="text-clay-800 dark:text-bronze-200">
+                        {dept.name}
+                      </span>
+                      <span className="font-medium text-bronze-700 dark:text-bronze-400">
                         {dept.count}
                       </span>
                     </div>
-                    <div className="h-2.5 rounded-full bg-bronze-100">
+                    <div className="h-2.5 rounded-full bg-bronze-100 dark:bg-clay-800">
                       <div
-                        className="h-2.5 rounded-full bg-bronze-600"
+                        className="h-2.5 rounded-full bg-bronze-600 dark:bg-bronze-500"
                         style={{ width: `${width}%` }}
                       />
                     </div>

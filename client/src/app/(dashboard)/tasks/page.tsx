@@ -5,6 +5,7 @@ import { apiFetch, isAdmin } from "@/lib/api";
 import { Task, Employee, Holiday } from "@/types";
 import Modal from "@/components/modal";
 import TaskCalendar from "@/components/TaskCalendar";
+import { useToast } from "@/components/ToastProvider";
 
 const priorityLabels: Record<Task["priority"], string> = {
   low: "Düşük / low",
@@ -13,9 +14,10 @@ const priorityLabels: Record<Task["priority"], string> = {
 };
 
 const priorityStyles: Record<Task["priority"], string> = {
-  low: "bg-green-100 text-green-700",
-  medium: "bg-amber-100 text-amber-700",
-  high: "bg-red-100 text-red-700",
+  low: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  medium:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  high: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 };
 
 const statusLabels: Record<Task["status"], string> = {
@@ -25,9 +27,10 @@ const statusLabels: Record<Task["status"], string> = {
 };
 
 const statusStyles: Record<Task["status"], string> = {
-  todo: "bg-gray-100 text-gray-600",
-  "in-progress": "bg-blue-100 text-blue-700",
-  done: "bg-green-100 text-green-700",
+  todo: "bg-gray-100 text-gray-600 dark:bg-clay-700 dark:text-bronze-200",
+  "in-progress":
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  done: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
 };
 
 const emptyForm = {
@@ -40,6 +43,7 @@ const emptyForm = {
 
 export default function TasksPage() {
   const admin = isAdmin();
+  const { showToast } = useToast();
 
   const currentUserId =
     typeof window !== "undefined"
@@ -108,6 +112,7 @@ export default function TasksPage() {
       setModalOpen(false);
       setForm(emptyForm);
       fetchTasks();
+      showToast("Görev oluşturuldu / Task created", "success");
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Kaydedilemedi / Save failed",
@@ -124,9 +129,11 @@ export default function TasksPage() {
         body: JSON.stringify({ status }),
       });
       fetchTasks();
+      showToast("Görev güncellendi / Task updated", "success");
     } catch (err) {
-      alert(
+      showToast(
         err instanceof Error ? err.message : "Güncellenemedi / Update failed",
+        "error",
       );
     }
   };
@@ -136,25 +143,41 @@ export default function TasksPage() {
     try {
       await apiFetch(`/tasks/${task._id}`, { method: "DELETE" });
       fetchTasks();
+      showToast("Görev silindi / Task deleted", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Silinemedi / Delete failed");
+      showToast(
+        err instanceof Error ? err.message : "Silinemedi / Delete failed",
+        "error",
+      );
     }
   };
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString("tr-TR");
 
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const inputCls =
-    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
+    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100";
 
   if (loading)
-    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
+    return (
+      <p className="text-clay-700 dark:text-bronze-200">
+        Yükleniyor... / Loading...
+      </p>
+    );
   if (error)
-    return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {error}
+      </div>
+    );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">Görevler / Tasks</h1>
+        <h1 className="text-2xl font-bold text-clay-800 dark:text-bronze-100">
+          Görevler / Tasks
+        </h1>
         {admin && (
           <button
             onClick={() => {
@@ -162,7 +185,7 @@ export default function TasksPage() {
               setFormError("");
               setModalOpen(true);
             }}
-            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+            className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             + Yeni Görev / New Task
           </button>
@@ -171,9 +194,9 @@ export default function TasksPage() {
 
       <TaskCalendar tasks={tasks} holidays={holidays} />
 
-      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm dark:border-clay-800 dark:bg-clay-900">
         <table className="w-full text-left text-sm">
-          <thead className="bg-bronze-100 text-clay-800">
+          <thead className="bg-bronze-100 text-clay-800 dark:bg-clay-800 dark:text-bronze-100">
             <tr>
               <th className="px-4 py-3 font-semibold">Başlık / Title</th>
               <th className="px-4 py-3 font-semibold">Atanan / Assignee</th>
@@ -190,7 +213,7 @@ export default function TasksPage() {
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-8 text-center text-clay-700/60"
+                  className="px-4 py-8 text-center text-clay-700/60 dark:text-bronze-200/50"
                 >
                   Görev yok. / No tasks yet. 📋
                 </td>
@@ -198,7 +221,7 @@ export default function TasksPage() {
             ) : (
               tasks.map((task) => (
                 <React.Fragment key={task._id}>
-                  <tr className="border-t border-bronze-100 hover:bg-bronze-50">
+                  <tr className="border-t border-bronze-100 hover:bg-bronze-50 dark:border-clay-800 dark:hover:bg-clay-800">
                     <td className="px-4 py-3">
                       <button
                         onClick={() =>
@@ -206,18 +229,18 @@ export default function TasksPage() {
                             expandedId === task._id ? null : task._id,
                           )
                         }
-                        className="flex items-center gap-1 font-medium text-clay-800 hover:text-bronze-700"
+                        className="flex items-center gap-1 font-medium text-clay-800 hover:text-bronze-700 dark:text-bronze-100 dark:hover:text-bronze-400"
                       >
-                        <span className="text-xs text-clay-700/50">
+                        <span className="text-xs text-clay-700/50 dark:text-bronze-200/40">
                           {expandedId === task._id ? "▼" : "▶"}
                         </span>
                         {task.title}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-clay-700/80">
+                    <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                       {task.assignedTo?.name ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-clay-700/80">
+                    <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                       {formatDate(task.dueDate)}
                     </td>
                     <td className="px-4 py-3">
@@ -250,26 +273,28 @@ export default function TasksPage() {
                       {admin ? (
                         <button
                           onClick={() => handleDelete(task)}
-                          className="text-red-600 hover:underline"
+                          className="text-red-600 hover:underline dark:text-red-400"
                         >
                           Sil / Delete
                         </button>
                       ) : (
-                        <span className="text-clay-700/40">—</span>
+                        <span className="text-clay-700/40 dark:text-bronze-200/30">
+                          —
+                        </span>
                       )}
                     </td>
                   </tr>
                   {expandedId === task._id && (
-                    <tr className="bg-bronze-50/40">
+                    <tr className="bg-bronze-50/40 dark:bg-clay-800/40">
                       <td colSpan={6} className="px-4 py-3">
-                        <div className="rounded-lg bg-white p-3 text-sm text-clay-700/90 shadow-sm">
-                          <p className="mb-1 font-semibold text-clay-800">
+                        <div className="rounded-lg bg-white p-3 text-sm text-clay-700/90 shadow-sm dark:bg-clay-900 dark:text-bronze-200">
+                          <p className="mb-1 font-semibold text-clay-800 dark:text-bronze-100">
                             Açıklama / Description
                           </p>
                           {task.description ? (
                             <p>{task.description}</p>
                           ) : (
-                            <p className="text-clay-700/50">
+                            <p className="text-clay-700/50 dark:text-bronze-200/40">
                               Açıklama girilmemiş. / No description.
                             </p>
                           )}
@@ -291,12 +316,12 @@ export default function TasksPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
               {formError}
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Başlık / Title *
             </label>
             <input
@@ -308,7 +333,7 @@ export default function TasksPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Açıklama / Description
             </label>
             <textarea
@@ -320,7 +345,7 @@ export default function TasksPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Ata / Assign to *
             </label>
             <select
@@ -340,7 +365,7 @@ export default function TasksPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Son Tarih / Due *
               </label>
               <input
@@ -349,11 +374,12 @@ export default function TasksPage() {
                 value={form.dueDate}
                 onChange={handleChange}
                 required
+                min={todayStr}
                 className={inputCls}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Öncelik / Priority
               </label>
               <select
@@ -373,7 +399,7 @@ export default function TasksPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>

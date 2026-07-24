@@ -96,7 +96,7 @@ export default function NotificationBell() {
     <div ref={wrapperRef} className="relative">
       <button
         onClick={handleToggle}
-        className="relative rounded-full p-2 text-xl transition hover:bg-bronze-100"
+        className="relative rounded-full p-2 text-xl transition hover:bg-bronze-100 dark:hover:bg-clay-800"
       >
         🔔
         {unreadCount > 0 && (
@@ -107,9 +107,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-bronze-100 bg-bronze-50 px-4 py-3">
-            <h3 className="text-sm font-semibold text-clay-800">
+        <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-xl border border-bronze-200 bg-white shadow-xl dark:border-clay-700 dark:bg-clay-800">
+          <div className="flex items-center justify-between border-b border-bronze-100 bg-bronze-50 px-4 py-3 dark:border-clay-700 dark:bg-clay-900">
+            <h3 className="text-sm font-semibold text-clay-800 dark:text-bronze-100">
               Bildirimler / Notifications
             </h3>
             {items.length > 0 && (
@@ -131,10 +131,10 @@ export default function NotificationBell() {
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item)}
-                  className={`flex w-full cursor-pointer items-start justify-between gap-2 border-b border-bronze-100 px-4 py-3 text-left text-sm transition hover:bg-bronze-50 ${
+                  className={`flex w-full cursor-pointer items-start justify-between gap-2 border-b border-bronze-100 px-4 py-3 text-left text-sm transition hover:bg-bronze-50 dark:border-clay-700 dark:hover:bg-clay-900 ${
                     item.read
-                      ? "text-clay-700/70"
-                      : "bg-bronze-50/50 font-medium text-clay-800"
+                      ? "text-clay-700/70 dark:text-bronze-200/60"
+                      : "bg-bronze-50/50 font-medium text-clay-800 dark:bg-clay-900/50 dark:text-bronze-100"
                   }`}
                 >
                   <div>

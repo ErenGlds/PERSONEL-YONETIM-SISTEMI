@@ -19,16 +19,18 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-clay-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-clay-800">{title}</h3>
+          <h3 className="text-lg font-semibold text-clay-800 dark:text-bronze-100">
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className="text-clay-700/60 hover:text-clay-800"
+            className="text-clay-700/60 hover:text-clay-800 dark:text-bronze-200/60 dark:hover:text-bronze-100"
           >
-            X
+            ✕
           </button>
         </div>
         {children}

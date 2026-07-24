@@ -20,9 +20,11 @@ const statusLabels: Record<Leave["status"], string> = {
 };
 
 const statusStyles: Record<Leave["status"], string> = {
-  pending: "bg-amber-100 text-amber-700",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
+  pending:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  approved:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  rejected: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 };
 
 const emptyForm = {
@@ -130,32 +132,42 @@ export default function LeavesPage() {
   const todayStr = new Date().toISOString().split("T")[0];
 
   const inputCls =
-    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300";
+    "w-full rounded-lg border border-bronze-200 px-3 py-2 focus:border-bronze-500 focus:outline-none focus:ring-2 focus:ring-bronze-300 dark:border-clay-700 dark:bg-clay-900 dark:text-bronze-100";
 
   if (loading)
-    return <p className="text-clay-700">Yükleniyor... / Loading...</p>;
+    return (
+      <p className="text-clay-700 dark:text-bronze-200">
+        Yükleniyor... / Loading...
+      </p>
+    );
   if (error)
-    return <div className="rounded-lg bg-red-50 p-4 text-red-700">{error}</div>;
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {error}
+      </div>
+    );
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-clay-800">İzinler / Leaves</h1>
+        <h1 className="text-2xl font-bold text-clay-800 dark:text-bronze-100">
+          İzinler / Leaves
+        </h1>
         <button
           onClick={() => {
             setForm(emptyForm);
             setFormError("");
             setModalOpen(true);
           }}
-          className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700"
+          className="rounded-lg bg-bronze-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-bronze-700 dark:bg-bronze-500 dark:hover:bg-bronze-600"
         >
           + Yeni İzin / New Leave
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-bronze-200 bg-white shadow-sm dark:border-clay-800 dark:bg-clay-900">
         <table className="w-full text-left text-sm">
-          <thead className="bg-bronze-100 text-clay-800">
+          <thead className="bg-bronze-100 text-clay-800 dark:bg-clay-800 dark:text-bronze-100">
             <tr>
               <th className="px-4 py-3 font-semibold">Çalışan / Employee</th>
               <th className="px-4 py-3 font-semibold">Tür / Type</th>
@@ -174,7 +186,7 @@ export default function LeavesPage() {
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-8 text-center text-clay-700/60"
+                  className="px-4 py-8 text-center text-clay-700/60 dark:text-bronze-200/50"
                 >
                   Henüz izin kaydı yok. / No leaves yet. 📅
                 </td>
@@ -183,20 +195,20 @@ export default function LeavesPage() {
               leaves.map((leave) => (
                 <tr
                   key={leave._id}
-                  className="border-t border-bronze-100 hover:bg-bronze-50"
+                  className="border-t border-bronze-100 hover:bg-bronze-50 dark:border-clay-800 dark:hover:bg-clay-800"
                 >
-                  <td className="px-4 py-3 font-medium text-clay-800">
+                  <td className="px-4 py-3 font-medium text-clay-800 dark:text-bronze-100">
                     {leave.employee
                       ? `${leave.employee.firstName} ${leave.employee.lastName}`
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                     {leaveTypeLabels[leave.leaveType]}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                     {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
                   </td>
-                  <td className="px-4 py-3 text-clay-700/80">
+                  <td className="px-4 py-3 text-clay-700/80 dark:text-bronze-200/70">
                     {leave.totalDays}
                   </td>
                   <td className="px-4 py-3">
@@ -211,13 +223,13 @@ export default function LeavesPage() {
                       <>
                         <button
                           onClick={() => updateStatus(leave, "approved")}
-                          className="mr-3 text-green-600 hover:underline"
+                          className="mr-3 text-green-600 hover:underline dark:text-green-400"
                         >
                           Onayla / Approve
                         </button>
                         <button
                           onClick={() => updateStatus(leave, "rejected")}
-                          className="mr-3 text-amber-600 hover:underline"
+                          className="mr-3 text-amber-600 hover:underline dark:text-amber-400"
                         >
                           Reddet / Reject
                         </button>
@@ -226,7 +238,7 @@ export default function LeavesPage() {
                     {admin && (
                       <button
                         onClick={() => handleDelete(leave)}
-                        className="text-red-600 hover:underline"
+                        className="text-red-600 hover:underline dark:text-red-400"
                       >
                         Sil / Delete
                       </button>
@@ -246,12 +258,12 @@ export default function LeavesPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
               {formError}
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Çalışan / Employee *
             </label>
             <select
@@ -270,7 +282,7 @@ export default function LeavesPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               İzin Türü / Leave Type *
             </label>
             <select
@@ -289,7 +301,7 @@ export default function LeavesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Başlangıç / Start *
               </label>
               <input
@@ -303,7 +315,7 @@ export default function LeavesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-clay-700">
+              <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
                 Bitiş / End *
               </label>
               <input
@@ -318,7 +330,7 @@ export default function LeavesPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-clay-700">
+            <label className="mb-1 block text-sm font-medium text-clay-700 dark:text-bronze-200">
               Açıklama / Reason
             </label>
             <textarea
@@ -332,7 +344,7 @@ export default function LeavesPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-bronze-600 py-2.5 font-medium text-white transition hover:bg-bronze-700 disabled:opacity-50 dark:bg-bronze-500 dark:hover:bg-bronze-600"
           >
             {saving ? "Kaydediliyor... / Saving..." : "Kaydet / Save"}
           </button>

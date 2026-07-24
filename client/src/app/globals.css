@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-bronze-50: #faf6f0;
   --color-bronze-100: #f0e6d8;
@@ -17,9 +19,15 @@
   --color-clay-700: #4a4238;
   --color-clay-800: #38322a;
   --color-clay-900: #26221d;
+  --color-clay-950: #1a1714;
 }
 
 body {
   background-color: var(--color-bronze-50);
   color: var(--color-clay-900);
+}
+
+.dark body {
+  background-color: var(--color-clay-950);
+  color: var(--color-bronze-100);
 }
